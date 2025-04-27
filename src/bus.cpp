@@ -9,44 +9,62 @@
 
 psx::BUS::BUS()
 {
+/*
+*   int i = -10;
+*   int b = 0;
+*   if (i < 0)
+*   {
+*      b = 10;
+	}
+* 
+*/
+
 	InstructionDescriptor instruction = { 0 };
 	instruction.primaryOpcode = ADDI;
-	instruction.rs = 1;
+	instruction.immediate = 0;
 	instruction.rt = 1;
-	instruction.immediate = 15;
-	addInstruction(instruction);
-
-	instruction = { 0 };
-	instruction.primaryOpcode = ADDI;
-	instruction.rs = 2;
-	instruction.rt = 2;
-	instruction.immediate = 15;
-	addInstruction(instruction);
-
-	instruction = { 0 };
-	instruction.primaryOpcode = REGIMM;
-	instruction.regimmType = BGEZ;
 	instruction.rs = 1;
-	instruction.offset = -3;
 	addInstruction(instruction);
-
-	instruction = { 0 };
-	instruction.primaryOpcode = ANDI;
-	instruction.rs = 2;
-	instruction.rt = 2;
-	instruction.immediate = 0b1110;
-	addInstruction(instruction);
-
-	addNOP();
 
 	instruction = { 0 };
 	instruction.primaryOpcode = ADDI;
+	instruction.immediate = 0;
+	instruction.rt = 2;
 	instruction.rs = 2;
-	instruction.rt = 2; 
-	instruction.immediate = -6;
+	addInstruction(instruction);
+	
+	instruction = { 0 };
+	instruction.primaryOpcode = BNE;
+	instruction.rs = 1;
+	instruction.rt = 2;
+	instruction.offset = 2; 
 	addInstruction(instruction);
 
+	instruction = { 0 };
+	instruction.primaryOpcode = ADDI;
+	instruction.immediate = -2;
+	instruction.rs = cpu_constants::LINK_REGISTER;
+	instruction.rt = cpu_constants::LINK_REGISTER;
+	addInstruction(instruction);
 
+	instruction = { 0 };
+	instruction.primaryOpcode = ADDI;
+	instruction.immediate = 10; 
+	instruction.rs = 2; 
+	instruction.rt = 2;
+	addInstruction(instruction);
+
+	instruction = { 0 };
+	instruction.primaryOpcode = ADDI;
+	instruction.immediate = -10;
+	instruction.rs = 2;
+	instruction.rt = 2;
+	addInstruction(instruction);
+
+	instruction = { 0 };
+	instruction.secondaryOpcode = BREAK;
+	addInstruction(instruction);
+	
 	endProgram();
 }
 

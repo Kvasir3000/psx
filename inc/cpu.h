@@ -47,16 +47,16 @@ namespace mips
 		void fetchInstruction();
 		void decodeInstruction();
 		void executeInstruction(); 
-		void executeDelayedJump();
+		void executeDelayedBranch();
 
 		bool checkOverflow(int32_t num1, int32_t num2, int32_t result);
 
 		/* COP0 interface */
-		void raiseException();
+		void raiseException(std::string exceptionType);
 		
 		void executeRegisterTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint32_t)> arithmeticOp, bool catchException);
 		void executeImmediateTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint16_t)> arithmeticOp, bool catchException);
-		void executeBranchOp(std::string mnemonic, std::function<bool(uint32_t, uint32_t)> branchCondition);
+		void executeBranchOp(std::string mnemonic, std::function<bool(uint32_t, uint32_t)> branchCondition, bool compareToZero);
 		void add();
 		void addi();
 		void addiu();
@@ -65,6 +65,13 @@ namespace mips
 		void andi();
 		void beq();
 		void bgez();
+		void bgezal();
+		void bgtz();
+		void blez();
+		void bltz();
+		void bltzal();
+		void bne();
+		void break_();
 
 	public:
 		CPU(std::shared_ptr<psx::Context> context);

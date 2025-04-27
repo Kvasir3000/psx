@@ -9,6 +9,8 @@ mips::CPU::CPU(std::shared_ptr<psx::Context> context) :
 	fillPrimaryOpcodeTable();
 	fillSecondaryOpcodeTable();
 	fillREGIMMOpcodeTable();
+
+	m_registerFile.fill(0);
 }
 
 mips::CPU::CPU()
@@ -35,7 +37,7 @@ bool mips::CPU::emuCycle()
 	}
 	else
 	{
-		executeDelayedJump();
+		executeDelayedBranch();
 	}
 	return true; 
 }
@@ -52,7 +54,7 @@ void mips::CPU::decodeInstruction()
 	{
 		m_instructionCallback = m_regimmOpcodeTable[m_instruction.getREGIMMOpcode()];
 	}
-	if (m_instruction.isPrimary())
+	else if (m_instruction.isPrimary())
 	{
 		m_instructionCallback = m_primaryOpcodeTable[m_instruction.getPrimaryOpcode()];
 	}
@@ -69,24 +71,29 @@ void mips::CPU::executeInstruction()
 		m_delaySlot.status = cpu_constants::DelaySlotState::Execute;
 	}
 	
-	m_context->getDebugger()->setPC(m_pc);
-	m_instructionCallback();
+	if (m_instructionCallback)
+	{
+		m_context->getDebugger()->setPC(m_pc);
+		m_instructionCallback();
+		m_instructionCallback = 0;
+	}
 }
 
-void mips::CPU::executeDelayedJump()
+void mips::CPU::executeDelayedBranch()
 {
 	m_pc = m_delaySlot.targetAddress;
 	m_context->getDebugger()->setPC(m_pc);
-	m_context->getDebugger()->logDelayJump();
+	m_context->getDebugger()->logDelayBranch();
 
 	m_delaySlot.status = cpu_constants::DelaySlotState::None;
 	m_delaySlot.targetAddress = 0;
 
 }
 
-void mips::CPU::raiseException()
+void mips::CPU::raiseException(std::string exceptionType)
 {
-	m_context->getDebugger()->logWarning("Exception raised, COP0 is not implemented yet");
+	std::string exception = exceptionType + " exception raised, COP0 is not implemented yet";
+	m_context->getDebugger()->logWarning(exception);
 }
 
 bool mips::CPU::checkOverflow(int32_t num1, int32_t num2, int32_t result)

@@ -36,7 +36,7 @@ void psx::Debugger::logRegisterTypeArithmetic(std::string mnemomic,
 	                                          int32_t rsSrc, 
 	                                          int32_t rtSrc)
 {
-	m_traceFile <<  LOG_PC(m_pc) << mnemomic << " r" << rd << ", r" << rs << ", r" << rt << " // " << result << ", " << LOG_SRC_RT_RS << "\n";
+	m_traceFile <<  LOG_PC(m_pc) << mnemomic << " r" << rd << ", r" << rs << ", r" << rt << " // " << result << ", " << LOG_SRC_RS_RT << "\n";
 }
 
 
@@ -47,30 +47,46 @@ void psx::Debugger::logImmediateTypeArithmetic(std::string mnemomic,
 	                                           int32_t result,
 	                                           int32_t rsSrc)
 {
-	m_traceFile << LOG_PC(m_pc) << mnemomic << LOG_RT_RS << immediate << " // " << result << ", " << rsSrc << ", " << immediate << "\n";
+	m_traceFile << LOG_PC(m_pc) << mnemomic << LOG_RS_RT << immediate << " // " << result << ", " << rsSrc << ", " << immediate << "\n";
 }
 
-void psx::Debugger::logJump(std::string mnemonic, 
-	                        uint32_t rt, 
-	                        uint32_t rs, 
-	                        int16_t offset, 
-	                        bool jump, 
-	                        uint32_t targetAddress, 
-	                        int32_t rsSrc, 
-	                        int32_t rtSrc)
+void psx::Debugger::logBranch(std::string mnemonic, 
+	                          uint32_t rt, 
+	                          uint32_t rs, 
+	                          int16_t offset, 
+	                          bool branch, 
+	                          uint32_t targetAddress, 
+	                          int32_t rsSrc, 
+	                          int32_t rtSrc,
+	                          bool compareToZero)
 {
-	m_traceFile << LOG_PC(m_pc) << mnemonic << LOG_RT_RS << offset;
-	if (jump)
+	m_traceFile << LOG_PC(m_pc) << mnemonic;
+	if (!compareToZero)
 	{
-		m_traceFile << " -> Jump to 0x" << SET_ADDRES_STYLE << targetAddress << std::dec << " // " << LOG_SRC_RT_RS << "\n";
+		m_traceFile << LOG_RS_RT;
 	}
 	else
 	{
-		m_traceFile << " -> Jump is ignored" << " // " << LOG_SRC_RT_RS << "\n";
+		m_traceFile << " r" << rs << ", 0, ";
+	}
+	m_traceFile << offset;
+
+	if (branch && !compareToZero)
+	{
+		m_traceFile << " // " << LOG_SRC_RS_RT << " -> Branch to 0x" << SET_ADDRES_STYLE << targetAddress << std::dec << "\n";
+	}
+	else if (branch)
+	{
+		m_traceFile << " // " << rsSrc << ", 0 -> Branch to 0x" << SET_ADDRES_STYLE << targetAddress << std::dec << "\n";;
+
+	}
+	else
+	{
+		m_traceFile << " // " << LOG_SRC_RS_RT << " -> Branch is ignored\n";
 	}
 }
 
-void psx::Debugger::logDelayJump()
+void psx::Debugger::logDelayBranch()
 {
-	m_traceFile << "Executing delayed jump -> 0x" << SET_ADDRES_STYLE << m_pc << "\n";
+	m_traceFile << "Executing delayed branch -> 0x" << SET_ADDRES_STYLE << m_pc << "\n";
 }
