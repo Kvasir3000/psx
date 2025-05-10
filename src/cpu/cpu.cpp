@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../../inc/cpu.h"
+#include "../../inc/cpu/cpu.h"
 
 mips::CPU::CPU(std::shared_ptr<psx::Context> context) :
 	m_context(context),
@@ -9,6 +9,7 @@ mips::CPU::CPU(std::shared_ptr<psx::Context> context) :
 	fillPrimaryOpcodeTable();
 	fillSecondaryOpcodeTable();
 	fillREGIMMOpcodeTable();
+	fillCOPOpcodeTable();
 
 	m_registerFile.fill(0);
 }
@@ -53,6 +54,10 @@ void mips::CPU::decodeInstruction()
 	if (m_instruction.isREGIMM())
 	{
 		m_instructionCallback = m_regimmOpcodeTable[m_instruction.getREGIMMOpcode()];
+	}
+	else if (m_instruction.isCOP())
+	{
+		m_instructionCallback = m_copOpcodeTable[m_instruction.getCOPOpcode()];
 	}
 	else if (m_instruction.isPrimary())
 	{

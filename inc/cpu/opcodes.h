@@ -13,6 +13,7 @@ enum PrimaryOpcodes
 	ADDI,
 	ADDIU,
 	SLTI,
+	SLTIU,
 	ANDI,
 	ORI,
 	XORI,
@@ -77,7 +78,7 @@ enum SecondaryOpcodes
 	NUMBER_OF_SECONDARY_OPCODES,
 };
 
-enum RegisterImmediate
+enum RegisterImmediateOpcodes
 {
 	BLTZ, 
 	BGEZ,
@@ -88,4 +89,14 @@ enum RegisterImmediate
 	BLTZALL,
 	BGEZALL,
 	NUMBER_OF_REGIMM_OPCODES
+};
+
+enum COPOpcodes
+{
+	MFC, 
+	CFC = 0x2,
+	MTC = 0x4,
+	CTC = 0x6,
+	// BCT and BCF are not implemented
+	NUMBER_OF_COP_OPCODES
 };

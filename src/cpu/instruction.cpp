@@ -1,5 +1,5 @@
-#include "../../inc/instruction.h"
-#include "../../inc/cpu_constants.h"
+#include "../../inc/cpu/instruction.h"
+#include "../../inc/constants/cpu_constants.h"
 
 Instruction::Instruction(uint32_t word) :
 	m_instructionWord(word)
@@ -40,6 +40,25 @@ bool Instruction::isREGIMM()
 uint32_t Instruction::getREGIMMOpcode()
 {
 	return (m_instructionWord & cpu_constants::REGIMM_TYPE_MASK) >> cpu_constants::REGIMM_TYPE_OFFSET;
+}
+
+bool Instruction::isCOP()
+{
+	/*
+       In case bit 25 is set, Coprocessor operation with the given cofunction should be executed, 
+	   emulator treats this as a primary opcode operation (COP0, COP2 opcodes)
+	*/
+	return ((m_instructionWord & cpu_constants::COP_OPCODE_MASK) == cpu_constants::COP_OPCODE) && !(m_instructionWord & cpu_constants::COP_OPERATION);
+}
+
+uint32_t Instruction::getCOPOpcode()
+{
+	return (m_instructionWord & cpu_constants::COP_SUBOPERATION_MASK) >> cpu_constants::COP_SUBOPERATION_OFFSET;
+}
+
+uint32_t Instruction::getCOPIdx()
+{
+	return (m_instructionWord & cpu_constants::COP_INDEX_MASK) >> cpu_constants::COP_INDEX_OFFSET;
 }
 
 uint32_t Instruction::getRS()

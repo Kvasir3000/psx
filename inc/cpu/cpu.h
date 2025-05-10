@@ -9,18 +9,27 @@
 
 #include "../inc/context.h"
 #include "../inc/bus.h"
-#include "../inc/opcodes.h"
-#include "../inc/cpu_constants.h"
-#include "../inc/instruction.h"
+#include "../inc/cpu/opcodes.h"
+#include "../inc/constants/cpu_constants.h"
+#include "../inc/cpu/instruction.h"
+#include "../inc/cpu/gte.h"
 
-#define DEBUG
 namespace mips
 {
 	class CPU
 	{
+	public:
+		CPU(std::shared_ptr<psx::Context> context);
+		CPU();
+		~CPU();
+
+		bool emuCycle();
+
 	private:
 		std::shared_ptr<psx::Context>                                  m_context;
-		std::array<uint32_t, cpu_constants::NUMBER_OF_REGISTERS>       m_registerFile;
+		std::array<uint32_t, cpu_constants::NUMBER_OF_REGISTERS>       m_registerFile; 
+		uint32_t                                                       m_hi; 
+		uint32_t                                                       m_lo;
 		uint32_t                                                       m_pc;
 
 		struct delaytSlot
@@ -35,6 +44,7 @@ namespace mips
 		std::array<std::function<void()>, NUMBER_OF_PRIMARY_OPCODES>   m_primaryOpcodeTable;
 		std::array<std::function<void()>, NUMBER_OF_SECONDARY_OPCODES> m_secondaryOpcodeTable;
 		std::array<std::function<void()>, NUMBER_OF_REGIMM_OPCODES>    m_regimmOpcodeTable;
+		std::array<std::function<void()>, NUMBER_OF_COP_OPCODES>       m_copOpcodeTable;
 
 		
 
@@ -42,6 +52,8 @@ namespace mips
 		void fillPrimaryOpcodeTable();
 		void fillSecondaryOpcodeTable();
 		void fillREGIMMOpcodeTable();
+		void fillCOPOpcodeTable();
+
 
 
 		void fetchInstruction();
@@ -53,8 +65,18 @@ namespace mips
 
 		/* COP0 interface */
 		void raiseException(std::string exceptionType);
+
+		GTE m_gte;
+
+
+		struct ArithmeticOpFlags
+		{
+			bool catchException;
+			bool isMultiplicative;
+			bool isSigned;
+		};
 		
-		void executeRegisterTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint32_t)> arithmeticOp, bool catchException);
+		void executeRegisterTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint32_t)> arithmeticOp, ArithmeticOpFlags flags);
 		void executeImmediateTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint16_t)> arithmeticOp, bool catchException);
 		void executeBranchOp(std::string mnemonic, std::function<bool(uint32_t, uint32_t)> branchCondition, bool compareToZero);
 		void add();
@@ -72,12 +94,10 @@ namespace mips
 		void bltzal();
 		void bne();
 		void break_();
-
-	public:
-		CPU(std::shared_ptr<psx::Context> context);
-		CPU();
-		~CPU();
-
-		bool emuCycle();
+		void cfc2();
+		void cop();
+		void ctc2();
+		void div();
+		void divu();
 	};
 }

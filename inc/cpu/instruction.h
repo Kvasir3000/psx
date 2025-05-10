@@ -4,8 +4,6 @@
 
 class Instruction
 {
-private: 
-	uint32_t m_instructionWord; 
 public:
 	Instruction(uint32_t word);
 	Instruction();
@@ -20,10 +18,16 @@ public:
 	bool     isREGIMM();
 	uint32_t getREGIMMOpcode();
 
+	bool     isCOP();
+	uint32_t getCOPOpcode();
+	uint32_t getCOPIdx();
 
 	uint32_t getRS();
 	uint32_t getRT();
 	uint32_t getRD();
 	int16_t  getImmediate();
 	int16_t  getOffset();
+
+private: 
+	uint32_t m_instructionWord; 
 };

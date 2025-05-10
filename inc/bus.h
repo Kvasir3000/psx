@@ -7,6 +7,14 @@ namespace psx
 {
 	class BUS
 	{
+	public:
+		BUS();
+		~BUS() {};
+		uint8_t  readByte(uint32_t memoryAddress);
+		uint32_t readWord(uint32_t memoryAddress);
+		int32_t  getInstructionCounter();
+		bool     isProgramEnd(uint32_t pc);
+
 	private:
 		uint8_t m_memory[SIZE] = { 0 };
 		struct InstructionDescriptor
@@ -16,21 +24,16 @@ namespace psx
 			uint16_t rt : 5;
 			uint16_t regimmType : 5;
 			uint16_t rs : 5;
-			uint16_t primaryOpcode : 6; 
+			uint16_t copSuboperation;
+			uint16_t primaryOpcode : 6;
 			uint16_t secondaryOpcode : 6;
 			uint16_t rd : 5;
+			bool     copCofun;
 		};
 
 		void addInstruction(InstructionDescriptor instruction);
 		void addNOP();
 		void endProgram();
 		int32_t instructionCounter = 0;
-	public:
-		BUS();
-	    ~BUS() {}; 
-		uint8_t  readByte(uint32_t memoryAddress);
-		uint32_t readWord(uint32_t memoryAddress);
-		int32_t  getInstructionCounter();
-		bool     isProgramEnd(uint32_t pc);
 	};
 }

@@ -3,8 +3,8 @@
 #include <limits> // Temporary 
  
 #include "../inc/bus.h"
-#include "../inc/cpu_constants.h"
-#include "../inc//opcodes.h"
+#include "../inc/constants/cpu_constants.h"
+#include "../inc/cpu/opcodes.h"
 
 
 psx::BUS::BUS()
@@ -21,7 +21,7 @@ psx::BUS::BUS()
 
 	InstructionDescriptor instruction = { 0 };
 	instruction.primaryOpcode = ADDI;
-	instruction.immediate = 0;
+	instruction.immediate = 1;
 	instruction.rt = 1;
 	instruction.rs = 1;
 	addInstruction(instruction);
@@ -62,6 +62,43 @@ psx::BUS::BUS()
 	addInstruction(instruction);
 
 	instruction = { 0 };
+	instruction.primaryOpcode = COP2; 
+	instruction.copSuboperation = CFC;
+	instruction.rd = 3; 
+	instruction.rt = 10; 
+	addInstruction(instruction);
+
+	instruction = { 0 };
+	instruction.primaryOpcode = COP2;
+	instruction.copCofun = true;
+	addInstruction(instruction);
+
+	instruction = { 0 };
+	instruction.primaryOpcode = COP0;
+	instruction.copCofun = true;
+	addInstruction(instruction);
+
+	instruction = { 0 };
+	instruction.primaryOpcode = COP2; 
+	instruction.copSuboperation = CTC; 
+	instruction.rt = 10;
+	instruction.rd = 10; 
+	addInstruction(instruction);
+	
+	instruction = { 0 };
+	instruction.primaryOpcode = ADDI; 
+	instruction.rt = 15; 
+	instruction.rs = 15; 
+	instruction.immediate = -3; 
+	addInstruction(instruction);
+
+	instruction = { 0 };
+	instruction.secondaryOpcode = DIVU;
+	instruction.rt = 15;
+	instruction.rs = 10; 
+	addInstruction(instruction);
+
+	instruction = { 0 };
 	instruction.secondaryOpcode = BREAK;
 	addInstruction(instruction);
 	
@@ -71,7 +108,7 @@ psx::BUS::BUS()
 void psx::BUS::addInstruction(InstructionDescriptor instruction)
 {
 	assert(!(instruction.primaryOpcode && instruction.secondaryOpcode), "ERROR: Wrong instruction");
-	assert(!(instruction.immediate && instruction.rd), "ERROR: Wrong instruction");
+	///assert(!(instruction.immediate && instruction.rd), "ERROR: Wrong instruction");
 
 	uint32_t memoryAddress = instructionCounter * cpu_constants::WORD_SIZE;
 
@@ -83,6 +120,8 @@ void psx::BUS::addInstruction(InstructionDescriptor instruction)
 	instructionWord |= instruction.rs << cpu_constants::RS_OFFSET; 
 	instructionWord |= instruction.rt << cpu_constants::RT_OFFSET; 
 	instructionWord |= instruction.regimmType << cpu_constants::REGIMM_TYPE_OFFSET;
+	instructionWord |= instruction.copSuboperation << cpu_constants::COP_SUBOPERATION_OFFSET;
+	instructionWord |= instruction.copCofun? cpu_constants::COP_OPERATION : 0;
 	instructionWord |= instruction.primaryOpcode << cpu_constants::PRIMARY_OPCODE_OFFSET; 
 
 	memcpy(&m_memory[memoryAddress], &instructionWord, cpu_constants::WORD_SIZE);
