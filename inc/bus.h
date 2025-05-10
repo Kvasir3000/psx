@@ -28,6 +28,8 @@ namespace psx
 			uint16_t primaryOpcode : 6;
 			uint16_t secondaryOpcode : 6;
 			uint16_t rd : 5;
+			uint32_t target : 28;
+
 			bool     copCofun;
 		};
 

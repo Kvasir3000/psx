@@ -54,7 +54,7 @@ enum SecondaryOpcodes
 	SRLV = 0x6,
 	SRAV,
 	JR,
-	JARL,
+	JALR,
 	SYSCALL = 0xC,
 	BREAK,
 	MFHI = 0x10,

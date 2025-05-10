@@ -31,6 +31,8 @@ namespace psx
 		void logRegisterTypeMultiplicativeArithmetic(std::string mnemonic, uint32_t rs, uint32_t rt, uint32_t hi, uint32_t lo, uint32_t rsSrc, uint32_t rtSrc, bool sign);
 		void logImmediateTypeArithmetic(std::string mnemonic, uint32_t rt, uint32_t rs, int16_t immediate,  int32_t result, int32_t rsSrc);
 		void logBranch(std::string mnemonic, uint32_t rt, uint32_t rs, int16_t offset, bool jump, uint32_t targetAddress, int32_t rsSrc, int32_t rtSrc, bool compareToZero);
+		void logJump(std::string mnemonic, uint32_t targetAddress);
+		void logJumpRegister(std::string mnemonic, uint32_t rs, uint32_t rsSrc);
 		void logDelayBranch();
 		void logMove(std::string mnemonic, uint32_t rt, uint32_t rd, int32_t rdSrc);
 	};

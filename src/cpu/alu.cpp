@@ -1,4 +1,7 @@
+#include <assert.h>
+
 #include "../../inc/cpu/cpu.h"
+
 
 
 void mips::CPU::fillPrimaryOpcodeTable()
@@ -10,7 +13,8 @@ void mips::CPU::fillPrimaryOpcodeTable()
 	m_primaryOpcodeTable[BNE]   = std::bind(&CPU::bne,   this);
 	m_primaryOpcodeTable[COP0]  = std::bind(&CPU::cop,   this);
 	m_primaryOpcodeTable[COP2]  = std::bind(&CPU::cop,   this);
-
+	m_primaryOpcodeTable[J]     = std::bind(&CPU::jump,  this);
+	m_primaryOpcodeTable[JAL]   = std::bind(&CPU::jal,   this);
 }
 
 void mips::CPU::fillSecondaryOpcodeTable()
@@ -21,6 +25,8 @@ void mips::CPU::fillSecondaryOpcodeTable()
 	m_secondaryOpcodeTable[BREAK] = std::bind(&CPU::break_, this);
 	m_secondaryOpcodeTable[DIV]   = std::bind(&CPU::div,    this);
 	m_secondaryOpcodeTable[DIVU]  = std::bind(&CPU::divu,   this);
+	m_secondaryOpcodeTable[JALR]  = std::bind(&CPU::jalr,   this);
+	m_secondaryOpcodeTable[JR]    = std::bind(&CPU::jr,     this);
 }
 
 void mips::CPU::fillREGIMMOpcodeTable()
@@ -118,6 +124,37 @@ void mips::CPU::executeBranchOp(std::string mnemonic, std::function<bool(uint32_
 	}
 }
 
+void mips::CPU::executeJump(std::string mnemonic)
+{
+	uint32_t target = m_instruction.getJumpTarget();
+	m_delaySlot.status = cpu_constants::DelaySlotState::Pending;
+	m_delaySlot.targetAddress = ((m_pc + cpu_constants::WORD_SIZE) & cpu_constants::PC_HIGH_BITS_MASK) | (target << 2);
+
+	if (m_context->isDebug())
+	{
+		m_context->getDebugger()->logJump("j", m_delaySlot.targetAddress);
+	}
+}
+
+void mips::CPU::excecuteJumpRegister(std::string mnemonic)
+{
+	uint32_t rd = m_instruction.getRD();
+	uint32_t rs = m_instruction.getRS();
+	
+	if (rd) // if rd is 0, means that this is not link instruction
+	{
+		assert(m_instruction.getSecondaryOpcode() == JALR);
+		m_registerFile[rd] = m_pc + (2 * cpu_constants::WORD_SIZE);
+	}
+	m_delaySlot.status = cpu_constants::DelaySlotState::Pending; 
+	m_delaySlot.targetAddress = m_registerFile[rs];
+
+	if (m_context->isDebug())
+	{
+		m_context->getDebugger()->logJumpRegister(mnemonic, rs, m_registerFile[rs]);
+	}
+}
+
 void mips::CPU::add()
 {
 	auto addOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 + operand2; };
@@ -140,14 +177,15 @@ void mips::CPU::addiu()
 void mips::CPU::addu()
 {
 	auto addOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 + operand2; };
-	ArithmeticOpFlags opFlags = {false, false, false};
-	//executeRegisterTypeArithmeticOp("addu", addOp, false, false);
+	ArithmeticOpFlags opFlags = { false, false, true };
+	executeRegisterTypeArithmeticOp("addu", addOp, opFlags);
 }
 
 void mips::CPU::and_()
 {
 	auto andOp = [](uint32_t operand1, uint32_t operand2)->int32_t { return operand1 & operand2; };
-	//executeRegisterTypeArithmeticOp("and", andOp, true, false);
+	ArithmeticOpFlags opFlags = { false, false, false };
+	executeRegisterTypeArithmeticOp("and", andOp, opFlags);
 }
 
 void mips::CPU::andi()
@@ -282,4 +320,30 @@ void mips::CPU::divu()
 	};
 	ArithmeticOpFlags opFlags = { false, true, false };
 	executeRegisterTypeArithmeticOp("divu", divide, opFlags);
+}
+
+void mips::CPU::jump()
+{
+	executeJump("j");
+}
+
+void mips::CPU::jal()
+{
+	m_registerFile[cpu_constants::LINK_REGISTER] = m_pc + (cpu_constants::WORD_SIZE * 2);
+	executeJump("jal");
+}
+
+void mips::CPU::jalr()
+{
+	excecuteJumpRegister("jalr");
+}
+
+void mips::CPU::jr()
+{
+	excecuteJumpRegister("jr");
+}
+
+void mips::CPU::lb()
+{
+
 }

@@ -27,6 +27,8 @@ public:
 	uint32_t getRD();
 	int16_t  getImmediate();
 	int16_t  getOffset();
+	int32_t  getJumpTarget();
+
 
 private: 
 	uint32_t m_instructionWord; 

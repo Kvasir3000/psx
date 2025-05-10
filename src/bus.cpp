@@ -9,16 +9,6 @@
 
 psx::BUS::BUS()
 {
-/*
-*   int i = -10;
-*   int b = 0;
-*   if (i < 0)
-*   {
-*      b = 10;
-	}
-* 
-*/
-
 	InstructionDescriptor instruction = { 0 };
 	instruction.primaryOpcode = ADDI;
 	instruction.immediate = 1;
@@ -32,13 +22,27 @@ psx::BUS::BUS()
 	instruction.rt = 2;
 	instruction.rs = 2;
 	addInstruction(instruction);
-	
+
+
 	instruction = { 0 };
-	instruction.primaryOpcode = BNE;
-	instruction.rs = 1;
-	instruction.rt = 2;
-	instruction.offset = 2; 
+	instruction.primaryOpcode = ADDI;
+	instruction.immediate = 24;
+	instruction.rt = 3;
+	instruction.rs = 3;
 	addInstruction(instruction);
+
+	instruction = { 0 };
+	instruction.secondaryOpcode = JR;
+	instruction.rs = 3;
+	addInstruction(instruction);
+
+	//
+	//instruction = { 0 };
+	//instruction.primaryOpcode = BNE;
+	//instruction.rs = 1;
+	//instruction.rt = 2;
+	//instruction.offset = 2; 
+	//addInstruction(instruction);
 
 	instruction = { 0 };
 	instruction.primaryOpcode = ADDI;
@@ -86,10 +90,21 @@ psx::BUS::BUS()
 	addInstruction(instruction);
 	
 	instruction = { 0 };
+	instruction.primaryOpcode = J;
+	instruction.target = 0xD;
+	addInstruction(instruction);
+
+	instruction = { 0 };
 	instruction.primaryOpcode = ADDI; 
 	instruction.rt = 15; 
 	instruction.rs = 15; 
 	instruction.immediate = -3; 
+	addInstruction(instruction);
+
+	instruction = { 0 };
+	instruction.secondaryOpcode = DIV;
+	instruction.rt = 15;
+	instruction.rs = 10;
 	addInstruction(instruction);
 
 	instruction = { 0 };
@@ -122,6 +137,7 @@ void psx::BUS::addInstruction(InstructionDescriptor instruction)
 	instructionWord |= instruction.regimmType << cpu_constants::REGIMM_TYPE_OFFSET;
 	instructionWord |= instruction.copSuboperation << cpu_constants::COP_SUBOPERATION_OFFSET;
 	instructionWord |= instruction.copCofun? cpu_constants::COP_OPERATION : 0;
+	instructionWord |= instruction.target;
 	instructionWord |= instruction.primaryOpcode << cpu_constants::PRIMARY_OPCODE_OFFSET; 
 
 	memcpy(&m_memory[memoryAddress], &instructionWord, cpu_constants::WORD_SIZE);

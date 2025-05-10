@@ -119,6 +119,16 @@ void psx::Debugger::logBranch(std::string mnemonic,
 	}
 }
 
+void psx::Debugger::logJump(std::string mnemonic, uint32_t targetAddress)
+{
+	OUTPUT_STREAM << LOG_PC(m_pc) << mnemonic << " -> Jump to 0x" << SET_ADDRES_STYLE << targetAddress << "\n";
+}
+
+void psx::Debugger::logJumpRegister(std::string mnemonic, uint32_t rs, uint32_t rsSrc)
+{
+	OUTPUT_STREAM << LOG_PC(m_pc) << mnemonic << ", r" << rs << " -> Jump to 0x" << SET_ADDRES_STYLE << rsSrc << "\n";
+}
+
 void psx::Debugger::logDelayBranch()
 {
 	OUTPUT_STREAM << "Executing delayed branch -> 0x" << SET_ADDRES_STYLE << m_pc << "\n";

@@ -6,9 +6,10 @@ namespace cpu_constants
 {
 	/* Instruction constants */
 	constexpr uint32_t SECONDARY_OPCODE_MASK   = 0x0000003F; /* bits 0....5  */ 
-	constexpr uint32_t BREAK_CODE_MASK         = 0x03FFFFC0; /* bits 6....25 */ 
 	constexpr uint32_t IMMEDIATE_MASK          = 0x0000FFFF; /* bits 0....16 */
 	constexpr uint32_t OFFSET_MASK             = 0x0000FFFF; /* bits 0....16 */
+	constexpr uint32_t JUMP_TARGET_MASK        = 0x00FFFFFF; /* bits 0....25 */
+	constexpr uint32_t BREAK_CODE_MASK         = 0x03FFFFC0; /* bits 6....25 */
 	constexpr uint32_t RD_OPCODE_MASK          = 0x0000F800; /* bits 11...15 */
 	constexpr uint32_t RT_OPCODE_MASK          = 0x001F0000; /* bits 16...20 */
 	constexpr uint32_t RS_OPCODE_MASK          = 0x03E00000; /* bits 21...25 */
@@ -23,6 +24,7 @@ namespace cpu_constants
 	constexpr uint32_t COP_OPCODE              = 0x40000000; /* bit  30      */
 	constexpr uint32_t COP_OPCODE_MASK         = 0xF0000000; /* bits 28...31 */
 
+	constexpr uint32_t PC_HIGH_BITS_MASK      =  0xF0000000; /* bits 28...31 */
 
 	constexpr uint32_t RD_OFFSET               = 11;
 	constexpr uint32_t RT_OFFSET               = 16;

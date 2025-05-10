@@ -36,7 +36,7 @@ namespace mips
 		{
 			cpu_constants::DelaySlotState                              status;
 			uint32_t                                                   targetAddress;
-		} m_delaySlot;
+		} m_delaySlot, m_delayLoad;
 
 		
 		Instruction                                                    m_instruction;
@@ -79,6 +79,9 @@ namespace mips
 		void executeRegisterTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint32_t)> arithmeticOp, ArithmeticOpFlags flags);
 		void executeImmediateTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint16_t)> arithmeticOp, bool catchException);
 		void executeBranchOp(std::string mnemonic, std::function<bool(uint32_t, uint32_t)> branchCondition, bool compareToZero);
+		void executeJump(std::string mnemonic);
+		void excecuteJumpRegister(std::string mnemonic);
+
 		void add();
 		void addi();
 		void addiu();
@@ -99,5 +102,10 @@ namespace mips
 		void ctc2();
 		void div();
 		void divu();
+		void jump();
+		void jal();
+		void jalr();
+		void jr();
+		void lb();
 	};
 }

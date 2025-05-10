@@ -85,3 +85,8 @@ int16_t Instruction::getOffset()
 {
 	return (m_instructionWord & cpu_constants::OFFSET_MASK);
 }
+
+int32_t Instruction::getJumpTarget()
+{
+	return (m_instructionWord & cpu_constants::JUMP_TARGET_MASK);
+}
