@@ -1,4 +1,5 @@
 #include <iostream>
+#include <assert.h>
 
 #include "../../inc/cpu/cpu.h"
 
@@ -40,6 +41,12 @@ bool mips::CPU::emuCycle()
 	{
 		executeDelayedBranch();
 	}
+	
+	if (!m_delayLoads.empty() && m_delayLoads.front().status == cpu_constants::DelaySlotState::Execute)
+	{
+		executeDelayedLoad();
+	}
+
 	return true; 
 }
 
@@ -75,6 +82,11 @@ void mips::CPU::executeInstruction()
 	{
 		m_delaySlot.status = cpu_constants::DelaySlotState::Execute;
 	}
+
+	if (!m_delayLoads.empty() && m_delayLoads.front().status == cpu_constants::Pending)
+	{
+		m_delayLoads.front().status = cpu_constants::DelaySlotState::Execute;
+	}
 	
 	if (m_instructionCallback)
 	{
@@ -86,14 +98,55 @@ void mips::CPU::executeInstruction()
 
 void mips::CPU::executeDelayedBranch()
 {
+	assert(m_delaySlot.status == cpu_constants::DelaySlotState::Execute && m_delaySlot.targetAddress != 0);
+
 	m_pc = m_delaySlot.targetAddress;
-	m_context->getDebugger()->setPC(m_pc);
-	m_context->getDebugger()->logDelayBranch();
+
+	if (m_context->isDebug())
+	{
+		m_context->getDebugger()->setPC(m_pc);
+		m_context->getDebugger()->logDelayedBranch();
+	}
+
 
 	m_delaySlot.status = cpu_constants::DelaySlotState::None;
 	m_delaySlot.targetAddress = 0;
 
 }
+
+void mips::CPU::executeDelayedLoad()
+{
+	DelayLoad load = m_delayLoads.front();
+	assert(load.status == cpu_constants::DelaySlotState::Execute && load.registerIdx != 0);
+	
+	//__debugbreak(); 
+	// Functionality below is wrong when loading data for halfword/word, take a look how this is handled
+	// in dubugger, do something similar here
+	bool isByte = load.loadType == cpu_constants::DelayLoadType::Byte;
+	bool isHalfword = load.loadType == cpu_constants::DelayLoadType::Halfword;
+	bool isWord = load.loadType == cpu_constants::DelayLoadType::Word;
+
+	if (isWord || !load.sign)
+	{
+		m_registerFile[load.registerIdx] = load.data;
+	}
+	else if (isByte) 
+	{
+		m_registerFile[load.registerIdx] = static_cast<int8_t>(load.data);
+	}
+	else if (isHalfword)
+	{
+		m_registerFile[load.registerIdx] = static_cast<int16_t>(load.data);
+	}
+
+	if (m_context->isDebug())
+	{
+		m_context->getDebugger()->logDelayedLoad(load.registerIdx, load.data, load.sign, isByte, isHalfword);
+	}
+
+	m_delayLoads.pop();
+}
+
 
 void mips::CPU::raiseException(std::string exceptionType)
 {

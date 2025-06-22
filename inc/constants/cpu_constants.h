@@ -46,4 +46,11 @@ namespace cpu_constants
 		Pending,
 		Execute,
 	};
+
+	enum DelayLoadType
+	{
+		Byte, 
+		Halfword, 
+		Word
+	};
 }

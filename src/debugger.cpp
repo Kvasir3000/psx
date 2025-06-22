@@ -27,6 +27,7 @@ void psx::Debugger::logWarning(std::string message)
 	OUTPUT_STREAM << "WARNING: " << message << "\n";
 }
 
+// Get rid of this function and write one to log pc from cpu directly
 void psx::Debugger::setPC(uint32_t pc)
 {
 	m_pc = pc;
@@ -42,7 +43,7 @@ void psx::Debugger::logRegisterTypeArithmetic(std::string mnemonic,
 	                                          uint32_t rtSrc, 
 	                                          bool sign)
 {
-	OUTPUT_STREAM << LOG_PC(m_pc) << mnemonic << " r" << rd << "," << LOG_RS_RT << rt << " // ";
+	OUTPUT_STREAM << LOG_PC(m_pc) << mnemonic << " r" << rd << "," << LOG_RS_RT << " // ";
 	if (sign)
 	{
 		OUTPUT_STREAM << static_cast<int32_t>(result) << ", " << LOG_SRC_RS_RT_SIGNED << "\n";
@@ -126,12 +127,40 @@ void psx::Debugger::logJump(std::string mnemonic, uint32_t targetAddress)
 
 void psx::Debugger::logJumpRegister(std::string mnemonic, uint32_t rs, uint32_t rsSrc)
 {
-	OUTPUT_STREAM << LOG_PC(m_pc) << mnemonic << ", r" << rs << " -> Jump to 0x" << SET_ADDRES_STYLE << rsSrc << "\n";
+	OUTPUT_STREAM << LOG_PC(m_pc) << mnemonic << " r" << rs << " -> Jump to 0x" << SET_ADDRES_STYLE << rsSrc << "\n";
 }
 
-void psx::Debugger::logDelayBranch()
+void psx::Debugger::logLoad(std::string mnemonic, uint32_t rt, int32_t offset, uint32_t base, uint32_t baseSrc)
+{
+	OUTPUT_STREAM << LOG_PC(m_pc) << mnemonic << " r" << rt << ", offset(r" << base << ") // offset = " << offset << ", base = 0x" << SET_ADDRES_STYLE << baseSrc << "\n";
+}
+
+void psx::Debugger::logLoadUpperImmediate(uint32_t rt, uint32_t immediate, uint32_t result)
+{
+	OUTPUT_STREAM << LOG_PC(m_pc) << "ldi rt" << rt << ", " << immediate << " // " << result << "\n"; 
+}
+
+void psx::Debugger::logDelayedBranch()
 {
 	OUTPUT_STREAM << "Executing delayed branch -> 0x" << SET_ADDRES_STYLE << m_pc << "\n";
+}
+
+void psx::Debugger::logDelayedLoad(uint32_t rt, uint32_t rtSrc, bool sign, bool byte, bool halfword)
+{
+	OUTPUT_STREAM << "Executing delayed load -> r" << std::dec << rt << " = ";
+
+	if (!sign)
+	{
+		OUTPUT_STREAM << rtSrc << "\n";
+	}
+	else if (byte)
+	{
+		OUTPUT_STREAM << static_cast<int32_t>(static_cast<int8_t>(rtSrc)) << "\n";
+	}
+	else if (halfword)
+	{
+		OUTPUT_STREAM << static_cast<int32_t>(static_cast<int16_t>(rtSrc)) << "\n";
+	}
 }
 
 void psx::Debugger::logMove(std::string mnemonic, uint32_t rt, uint32_t rd, int32_t rdSrc)

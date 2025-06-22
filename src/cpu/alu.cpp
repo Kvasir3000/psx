@@ -15,6 +15,13 @@ void mips::CPU::fillPrimaryOpcodeTable()
 	m_primaryOpcodeTable[COP2]  = std::bind(&CPU::cop,   this);
 	m_primaryOpcodeTable[J]     = std::bind(&CPU::jump,  this);
 	m_primaryOpcodeTable[JAL]   = std::bind(&CPU::jal,   this);
+	m_primaryOpcodeTable[LB]    = std::bind(&CPU::lb ,   this);
+	m_primaryOpcodeTable[LBU]   = std::bind(&CPU::lbu,   this);
+	m_primaryOpcodeTable[LH]    = std::bind(&CPU::lh,    this);
+	m_primaryOpcodeTable[LHU]   = std::bind(&CPU::lhu,   this);
+	m_primaryOpcodeTable[LUI]   = std::bind(&CPU::lui,   this);
+	m_primaryOpcodeTable[LW]    = std::bind(&CPU::lw,    this);
+
 }
 
 void mips::CPU::fillSecondaryOpcodeTable()
@@ -124,7 +131,7 @@ void mips::CPU::executeBranchOp(std::string mnemonic, std::function<bool(uint32_
 	}
 }
 
-void mips::CPU::executeJump(std::string mnemonic)
+void mips::CPU::executeJumpOp(std::string mnemonic)
 {
 	uint32_t target = m_instruction.getJumpTarget();
 	m_delaySlot.status = cpu_constants::DelaySlotState::Pending;
@@ -136,7 +143,7 @@ void mips::CPU::executeJump(std::string mnemonic)
 	}
 }
 
-void mips::CPU::excecuteJumpRegister(std::string mnemonic)
+void mips::CPU::excecuteJumpRegisterOp(std::string mnemonic)
 {
 	uint32_t rd = m_instruction.getRD();
 	uint32_t rs = m_instruction.getRS();
@@ -155,10 +162,34 @@ void mips::CPU::excecuteJumpRegister(std::string mnemonic)
 	}
 }
 
+void mips::CPU::executeLoadOp(std::string mnemonic, std::function<uint32_t(uint32_t)> loadOp, LoadOpFlags opFlags)
+{
+	uint32_t rt = m_instruction.getRT();
+	uint32_t base = m_instruction.getRS();
+	int32_t  offset = m_instruction.getOffset();
+
+	uint32_t address = m_registerFile[base] + offset;
+
+	DelayLoad load;
+	load.status = cpu_constants::DelaySlotState::Pending;
+	load.data = loadOp(address);
+	load.registerIdx = rt;
+	load.loadType = opFlags.loadType;
+	load.sign = opFlags.isSigned; 
+
+	m_delayLoads.emplace(load);
+
+	if (m_context->isDebug())
+	{
+		m_context->getDebugger()->logLoad(mnemonic, rt, offset, base, m_registerFile[base]);
+	}
+}
+
+
 void mips::CPU::add()
 {
 	auto addOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 + operand2; };
-	ArithmeticOpFlags opFlags = { true, false, false };
+	ArithmeticOpFlags opFlags = { true, false, true };
 	executeRegisterTypeArithmeticOp("add", addOp, opFlags);
 } 
 
@@ -286,7 +317,7 @@ void mips::CPU::ctc2()
 // Modulo looks might be working wrong, need to check
 void mips::CPU::div()
 {
-	auto divide = [this](int32_t operand1, int32_t operand2)->uint32_t
+	auto divideOp = [this](int32_t operand1, int32_t operand2)->uint32_t
     {
 			if (operand2 != 0)
 			{
@@ -300,12 +331,12 @@ void mips::CPU::div()
 			return 0;
 	};
 	ArithmeticOpFlags opFlags = { false, true, true };
-	executeRegisterTypeArithmeticOp("div", divide, opFlags);
+	executeRegisterTypeArithmeticOp("div", divideOp, opFlags);
 }
 
 void mips::CPU::divu()
 {
-	auto divide = [this](uint32_t operand1, uint32_t operand2)->uint32_t
+	auto divideOp = [this](uint32_t operand1, uint32_t operand2)->uint32_t
 	{
 			if (operand2 != 0)
 			{
@@ -319,31 +350,74 @@ void mips::CPU::divu()
 			return 0;
 	};
 	ArithmeticOpFlags opFlags = { false, true, false };
-	executeRegisterTypeArithmeticOp("divu", divide, opFlags);
+	executeRegisterTypeArithmeticOp("divu", divideOp, opFlags);
 }
 
 void mips::CPU::jump()
 {
-	executeJump("j");
+	executeJumpOp("j");
 }
 
 void mips::CPU::jal()
 {
 	m_registerFile[cpu_constants::LINK_REGISTER] = m_pc + (cpu_constants::WORD_SIZE * 2);
-	executeJump("jal");
+	executeJumpOp("jal");
 }
 
 void mips::CPU::jalr()
 {
-	excecuteJumpRegister("jalr");
+	excecuteJumpRegisterOp("jalr");
 }
 
 void mips::CPU::jr()
 {
-	excecuteJumpRegister("jr");
+	excecuteJumpRegisterOp("jr");
 }
 
 void mips::CPU::lb()
 {
+	auto loadByteOp = [this](uint32_t memoryAddress)->int32_t { return m_context->getBus()->readByte(memoryAddress); };
+	LoadOpFlags opFlags = {cpu_constants::DelayLoadType::Byte, true};
+	executeLoadOp("lb", loadByteOp, opFlags);
+}
 
+void mips::CPU::lbu()
+{
+	auto loadByteOp = [this](uint32_t memoryAddress)->uint32_t { return m_context->getBus()->readByte(memoryAddress); };
+	LoadOpFlags opFlags = { cpu_constants::DelayLoadType::Byte, false };
+	executeLoadOp("lbu", loadByteOp, opFlags);
+}
+
+void mips::CPU::lh()
+{
+	auto loadHalfwordOp = [this](uint32_t memoryAddress)->int32_t { return m_context->getBus()->readHalfword(memoryAddress); };
+	LoadOpFlags opFlags = { cpu_constants::DelayLoadType::Halfword, true };
+	executeLoadOp("lh", loadHalfwordOp, opFlags);
+};
+
+void mips::CPU::lhu()
+{
+	auto loadHalfwordOp = [this](uint32_t memoryAddress)->uint32_t { return m_context->getBus()->readHalfword(memoryAddress); };
+	LoadOpFlags opFlags = { cpu_constants::DelayLoadType::Halfword, false };
+	executeLoadOp("lhu", loadHalfwordOp, opFlags);
+}
+
+void mips::CPU::lui()
+{
+	uint32_t rt = m_instruction.getRT();
+	uint16_t immediate = m_instruction.getImmediate();
+    
+	m_registerFile[rt] = immediate << 16; 
+
+	if (m_context->isDebug())
+	{
+		m_context->getDebugger()->logLoadUpperImmediate(rt, immediate, m_registerFile[rt]);
+	}
+}
+
+void mips::CPU::lw()
+{
+	auto loadWord = [this](uint32_t memoryAddress)->uint32_t { return m_context->getBus()->readWord(memoryAddress); };
+	LoadOpFlags opFlags = { cpu_constants::DelayLoadType::Word, false };
+	executeLoadOp("lw", loadWord, opFlags);
 }

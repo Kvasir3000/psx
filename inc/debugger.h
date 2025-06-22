@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string>
 
-#include "../inc/debugger_constants.h"
+#include "../inc/constants/debugger_constants.h"
 
 #define CONSOLE_OUTPUT
 
@@ -33,7 +33,10 @@ namespace psx
 		void logBranch(std::string mnemonic, uint32_t rt, uint32_t rs, int16_t offset, bool jump, uint32_t targetAddress, int32_t rsSrc, int32_t rtSrc, bool compareToZero);
 		void logJump(std::string mnemonic, uint32_t targetAddress);
 		void logJumpRegister(std::string mnemonic, uint32_t rs, uint32_t rsSrc);
-		void logDelayBranch();
+		void logLoad(std::string mnemonic, uint32_t rt, int32_t offset, uint32_t base, uint32_t baseSrc);
+		void logLoadUpperImmediate(uint32_t rt, uint32_t immediate, uint32_t result);
+		void logDelayedBranch();
+		void logDelayedLoad(uint32_t rt, uint32_t rtSrc, bool sign, bool byte, bool halfword);
 		void logMove(std::string mnemonic, uint32_t rt, uint32_t rd, int32_t rdSrc);
 	};
 };

@@ -11,6 +11,7 @@ namespace psx
 		BUS();
 		~BUS() {};
 		uint8_t  readByte(uint32_t memoryAddress);
+		uint16_t readHalfword(uint32_t memoryAddress);
 		uint32_t readWord(uint32_t memoryAddress);
 		int32_t  getInstructionCounter();
 		bool     isProgramEnd(uint32_t pc);
@@ -28,6 +29,7 @@ namespace psx
 			uint16_t primaryOpcode : 6;
 			uint16_t secondaryOpcode : 6;
 			uint16_t rd : 5;
+			uint16_t base : 5;
 			uint32_t target : 28;
 
 			bool     copCofun;
@@ -36,6 +38,9 @@ namespace psx
 		void addInstruction(InstructionDescriptor instruction);
 		void addNOP();
 		void endProgram();
+
+		// Testing programs
+		void testLoadOperations();
 		int32_t instructionCounter = 0;
 	};
 }

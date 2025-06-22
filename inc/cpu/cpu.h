@@ -6,6 +6,7 @@
 #include <array>
 #include <map>
 #include <string>
+#include <queue>
 
 #include "../inc/context.h"
 #include "../inc/bus.h"
@@ -32,13 +33,22 @@ namespace mips
 		uint32_t                                                       m_lo;
 		uint32_t                                                       m_pc;
 
-		struct delaytSlot
+		struct DelaySlot
 		{
 			cpu_constants::DelaySlotState                              status;
 			uint32_t                                                   targetAddress;
-		} m_delaySlot, m_delayLoad;
+		} m_delaySlot;
 
-		
+		struct DelayLoad
+		{
+			cpu_constants::DelaySlotState                              status;
+			cpu_constants::DelayLoadType                               loadType;
+			uint32_t                                                   registerIdx;
+			uint32_t                                                   data;
+			bool                                                       sign; 
+		};
+		std::queue<DelayLoad>                                          m_delayLoads;
+
 		Instruction                                                    m_instruction;
 		std::function<void()>                                          m_instructionCallback;
 		std::array<std::function<void()>, NUMBER_OF_PRIMARY_OPCODES>   m_primaryOpcodeTable;
@@ -60,6 +70,7 @@ namespace mips
 		void decodeInstruction();
 		void executeInstruction(); 
 		void executeDelayedBranch();
+		void executeDelayedLoad();
 
 		bool checkOverflow(int32_t num1, int32_t num2, int32_t result);
 
@@ -75,12 +86,19 @@ namespace mips
 			bool isMultiplicative;
 			bool isSigned;
 		};
-		
-		void executeRegisterTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint32_t)> arithmeticOp, ArithmeticOpFlags flags);
+
+		struct LoadOpFlags
+		{
+			cpu_constants::DelayLoadType loadType;
+			bool isSigned;
+		};
+
+		void executeRegisterTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint32_t)> arithmeticOp, ArithmeticOpFlags opFlags);
 		void executeImmediateTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint16_t)> arithmeticOp, bool catchException);
 		void executeBranchOp(std::string mnemonic, std::function<bool(uint32_t, uint32_t)> branchCondition, bool compareToZero);
-		void executeJump(std::string mnemonic);
-		void excecuteJumpRegister(std::string mnemonic);
+		void executeJumpOp(std::string mnemonic);
+		void excecuteJumpRegisterOp(std::string mnemonic);
+		void executeLoadOp(std::string mnemonic, std::function<uint32_t(uint32_t)> readOp, LoadOpFlags opFlags);
 
 		void add();
 		void addi();
@@ -107,5 +125,10 @@ namespace mips
 		void jalr();
 		void jr();
 		void lb();
+		void lbu();
+		void lh();
+		void lhu();
+		void lui();
+		void lw();
 	};
 }
