@@ -14,6 +14,7 @@
 #include "../inc/constants/cpu_constants.h"
 #include "../inc/cpu/instruction.h"
 #include "../inc/cpu/gte.h"
+#include "../inc/cpu/cop0.h"
 
 namespace mips
 {
@@ -42,7 +43,7 @@ namespace mips
 		struct DelayLoad
 		{
 			cpu_constants::DelaySlotState                              status;
-			cpu_constants::DelayLoadType                               loadType;
+			cpu_constants::LoadSize                                    loadSize;
 			uint32_t                                                   registerIdx;
 			uint32_t                                                   data;
 			bool                                                       sign; 
@@ -77,7 +78,8 @@ namespace mips
 		/* COP0 interface */
 		void raiseException(std::string exceptionType);
 
-		GTE m_gte;
+		GTE  m_gte;
+		COP0 m_cop0;
 
 
 		struct ArithmeticOpFlags
@@ -89,16 +91,24 @@ namespace mips
 
 		struct LoadOpFlags
 		{
-			cpu_constants::DelayLoadType loadType;
+			cpu_constants::LoadSize size;
 			bool isSigned;
+			uint32_t alignMask = 0;
+			bool isCop2 = false;
 		};
 
-		void executeRegisterTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint32_t)> arithmeticOp, ArithmeticOpFlags opFlags);
-		void executeImmediateTypeArithmeticOp(std::string mnemonic, std::function<int32_t(uint32_t, uint16_t)> arithmeticOp, bool catchException);
-		void executeBranchOp(std::string mnemonic, std::function<bool(uint32_t, uint32_t)> branchCondition, bool compareToZero);
-		void executeJumpOp(std::string mnemonic);
-		void excecuteJumpRegisterOp(std::string mnemonic);
-		void executeLoadOp(std::string mnemonic, std::function<uint32_t(uint32_t)> readOp, LoadOpFlags opFlags);
+		void executeRegisterTypeArithmeticOp(const std::string& mnemonic, const std::function<int32_t(uint32_t, uint32_t)>& arithmeticOp, const ArithmeticOpFlags& opFlags);
+		void executeImmediateTypeArithmeticOp(const std::string&  mnemonic, const std::function<int32_t(uint32_t, uint16_t)>& arithmeticOp, bool catchException);
+		void executeBranchOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& branchCondition, bool compareToZero);
+		void executeJumpOp(const std::string& mnemonic);
+		void excecuteJumpRegisterOp(const std::string& mnemonic);
+		void executeLoadOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t)>& readOp, const LoadOpFlags& opFlags);
+		void executeLoadWordLROp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t, uint32_t)>& adjustWord);
+		void executeStoreOp(const std::string& mnemonic, const std::function<void(uint32_t, uint32_t)>& storeOp);
+		void executeShiftOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t&)>& shiftOp, bool isLogical);
+		void executeRegisterSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation);
+		void executeImmediateSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation);
+
 
 		void add();
 		void addi();
@@ -130,5 +140,24 @@ namespace mips
 		void lhu();
 		void lui();
 		void lw();
+		void lwc2();
+		void lwl();
+		void lwr();
+		void mfc();
+		void mfhi();
+		void mflo();
+		void mtc();
+		void mthi();
+		void mtlo();
+		void mult();
+		void multu();
+		void nor();
+		void or();
+		void ori();
+		void sb();
+		void sh();
+		void sll();
+		void sllv();
+		void slt();
 	};
 }

@@ -23,12 +23,13 @@ public:
 	uint32_t getCOPIdx();
 
 	uint32_t getRS();
+	uint32_t getBase();
 	uint32_t getRT();
 	uint32_t getRD();
+	uint32_t getSA();
 	int16_t  getImmediate();
 	int16_t  getOffset();
 	int32_t  getJumpTarget();
-
 
 private: 
 	uint32_t m_instructionWord; 

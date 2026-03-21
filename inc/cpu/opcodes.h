@@ -18,7 +18,7 @@ enum PrimaryOpcodes
 	ORI,
 	XORI,
 	LUI,
-	COP0,
+	COP0_,
 	COP1,
 	COP2,
 	COP3,

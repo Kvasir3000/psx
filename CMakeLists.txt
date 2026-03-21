@@ -15,17 +15,20 @@ set(SOURCES
    src/cpu/instruction.cpp
    src/cpu/alu.cpp 
    src/cpu/gte.cpp
+   src/cpu/cop0.cpp
    inc/bus.h
    inc/context.h
    inc/cpu/cpu.h
    inc/debugger.h
-   inc/debugger_constants.h
    inc/cpu/instruction.h
    inc/cpu/opcodes.h
    inc/cpu/gte.h
+   inc/constants/debugger_constants.h
    inc/constants/cpu_constants.h
    inc/constants/gte_constants.h
    inc/psx.h
+   inc/cpu/cop0.h
+
 )
 
 add_executable(psx ${SOURCES})

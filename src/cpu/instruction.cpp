@@ -24,7 +24,7 @@ uint32_t Instruction::getPrimaryOpcode()
 
 bool Instruction::isSecondary()
 {
-	return (m_instructionWord & cpu_constants::SECONDARY_OPCODE_MASK) > 0; 
+	return (m_instructionWord & cpu_constants::PRIMARY_OPCODE_MASK) == 0;
 }
 
 uint32_t Instruction::getSecondaryOpcode()
@@ -66,6 +66,11 @@ uint32_t Instruction::getRS()
 	return (m_instructionWord & cpu_constants::RS_OPCODE_MASK) >> cpu_constants::RS_OFFSET;
 }
 
+uint32_t Instruction::getBase()
+{
+	return getRS();
+}
+
 uint32_t Instruction::getRD()
 {
 	return (m_instructionWord & cpu_constants::RD_OPCODE_MASK) >> cpu_constants::RD_OFFSET;
@@ -74,6 +79,11 @@ uint32_t Instruction::getRD()
 uint32_t Instruction::getRT()
 {
 	return (m_instructionWord & cpu_constants::RT_OPCODE_MASK) >> cpu_constants::RT_OFFSET;
+}
+
+uint32_t Instruction::getSA()
+{
+	return (m_instructionWord & cpu_constants::SA_OPCODE_MASK) >> cpu_constants::SA_OFFSET;
 }
 
 int16_t Instruction::getImmediate()

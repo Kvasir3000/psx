@@ -35,7 +35,7 @@ bool mips::CPU::emuCycle()
 		fetchInstruction();
 		decodeInstruction();
 		executeInstruction();
-		m_pc += cpu_constants::WORD_SIZE;
+		m_pc += cpu_constants::WORD_SIZE_BYTES;
 	}
 	else
 	{
@@ -90,7 +90,7 @@ void mips::CPU::executeInstruction()
 	
 	if (m_instructionCallback)
 	{
-		m_context->getDebugger()->setPC(m_pc);
+		m_context->getDebugger()->logPC(m_pc);
 		m_instructionCallback();
 		m_instructionCallback = 0;
 	}
@@ -119,12 +119,10 @@ void mips::CPU::executeDelayedLoad()
 	DelayLoad load = m_delayLoads.front();
 	assert(load.status == cpu_constants::DelaySlotState::Execute && load.registerIdx != 0);
 	
-	//__debugbreak(); 
-	// Functionality below is wrong when loading data for halfword/word, take a look how this is handled
-	// in dubugger, do something similar here
-	bool isByte = load.loadType == cpu_constants::DelayLoadType::Byte;
-	bool isHalfword = load.loadType == cpu_constants::DelayLoadType::Halfword;
-	bool isWord = load.loadType == cpu_constants::DelayLoadType::Word;
+
+	bool isByte = load.loadSize == cpu_constants::LoadSize::Byte;
+	bool isHalfword = load.loadSize == cpu_constants::LoadSize::Halfword;
+	bool isWord = load.loadSize == cpu_constants::LoadSize::Word;
 
 	if (isWord || !load.sign)
 	{
@@ -148,9 +146,9 @@ void mips::CPU::executeDelayedLoad()
 }
 
 
-void mips::CPU::raiseException(std::string exceptionType)
+void mips::CPU::raiseException(std::string exception)
 {
-	std::string exception = exceptionType + " exception raised, COP0 is not implemented yet";
+	//std::string exception = exceptionType + " exception raised, COP0 is not implemented yet";
 	m_context->getDebugger()->logWarning(exception);
 }
 

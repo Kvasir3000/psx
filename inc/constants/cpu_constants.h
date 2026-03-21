@@ -10,6 +10,7 @@ namespace cpu_constants
 	constexpr uint32_t OFFSET_MASK             = 0x0000FFFF; /* bits 0....16 */
 	constexpr uint32_t JUMP_TARGET_MASK        = 0x00FFFFFF; /* bits 0....25 */
 	constexpr uint32_t BREAK_CODE_MASK         = 0x03FFFFC0; /* bits 6....25 */
+	constexpr uint32_t SA_OPCODE_MASK          = 0x000007C0; /* bits 6....10 */
 	constexpr uint32_t RD_OPCODE_MASK          = 0x0000F800; /* bits 11...15 */
 	constexpr uint32_t RT_OPCODE_MASK          = 0x001F0000; /* bits 16...20 */
 	constexpr uint32_t RS_OPCODE_MASK          = 0x03E00000; /* bits 21...25 */
@@ -26,6 +27,7 @@ namespace cpu_constants
 
 	constexpr uint32_t PC_HIGH_BITS_MASK      =  0xF0000000; /* bits 28...31 */
 
+	constexpr uint32_t SA_OFFSET               = 6;
 	constexpr uint32_t RD_OFFSET               = 11;
 	constexpr uint32_t RT_OFFSET               = 16;
 	constexpr uint32_t REGIMM_TYPE_OFFSET      = 16;
@@ -38,8 +40,16 @@ namespace cpu_constants
 
 	constexpr uint16_t NUMBER_OF_REGISTERS     = 32;
 	constexpr uint16_t LINK_REGISTER           = 31; 
-	constexpr uint32_t WORD_SIZE               = 4;
-
+	constexpr uint32_t WORD_SIZE_BYTES         = 4;
+	constexpr uint32_t WORD_SIZE_BITS          = 32;
+	constexpr uint32_t HALFWORD_SIZE_BITS      = 16;
+	constexpr uint32_t BYTE_SIZE_BITS          = 8;
+	constexpr uint64_t BYTE_MASK               = 0x000000FF;
+	constexpr uint64_t HALFWORD_MASK           = 0x0000FFFF;
+	constexpr uint64_t WORD_MASK               = 0xFFFFFFFF;
+	constexpr uint32_t WORD_ALIGNED_MASK       = 0b11;
+	constexpr uint32_t HALFWORD_ALIGNED_MASK   = 0b01;
+	
 	enum DelaySlotState
 	{
 		None,
@@ -47,10 +57,10 @@ namespace cpu_constants
 		Execute,
 	};
 
-	enum DelayLoadType
+	enum LoadSize
 	{
 		Byte, 
 		Halfword, 
 		Word
-	};
+	}; 
 }
