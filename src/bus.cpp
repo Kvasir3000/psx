@@ -13,9 +13,9 @@ psx::BUS::BUS()
 	//testLoadCOP2();
 	//testLoadWLR();
 	//testMove();
-	//testArithmeticOperations();
+	testArithmeticOperations();
 	//testStore();
-	testSetOn();
+	//testSetOn();
 	endProgram();
 }
 
@@ -118,6 +118,8 @@ void psx::BUS::ori(uint32_t rt, uint32_t rs, uint16_t immediate)
 	instruction.immediate = immediate;
 	addInstruction(instruction);
 }
+
+
 void psx::BUS::addi(uint32_t rt, uint32_t rs, int16_t immediate)
 {
 	InstructionDescriptor instruction = { 0 };
@@ -125,6 +127,16 @@ void psx::BUS::addi(uint32_t rt, uint32_t rs, int16_t immediate)
 	instruction.rt = rt;
 	instruction.rs = rs;
 	instruction.immediate = immediate;
+	addInstruction(instruction);
+}
+
+void psx::BUS::add(uint32_t rs, uint32_t rt, int32_t rd)
+{
+	InstructionDescriptor instruction = { 0 };
+	instruction.secondaryOpcode = ADD;
+	instruction.rt = rs;
+	instruction.rs = rt;
+	instruction.rd = rd;
 	addInstruction(instruction);
 }
 

@@ -28,12 +28,38 @@ namespace mips
 		bool emuCycle();
 
 	private:
+		template<typename Type>
+		struct Register
+		{
+			Register(uint32_t idx, Type v)
+			{ 
+				name = "r" + std::to_string(idx);
+				value = v; 
+			};
+			Type value;
+			std::string name;
+
+			void set_value(Type v) { value = v; }
+		};
+
+		template<typename Type>
+		struct Immediate
+		{
+			Immediate(Type v)
+			{
+				name = std::to_string(v); 
+				value = v;
+			};
+			Type value;
+			std::string name;
+		};
+
 		std::shared_ptr<psx::Context>                                  m_context;
 		std::array<uint32_t, cpu_constants::NUMBER_OF_REGISTERS>       m_registerFile; 
 		uint32_t                                                       m_hi; 
 		uint32_t                                                       m_lo;
 		uint32_t                                                       m_pc;
-
+		
 		struct DelaySlot
 		{
 			cpu_constants::DelaySlotState                              status;
@@ -96,9 +122,12 @@ namespace mips
 			uint32_t alignMask = 0;
 			bool isCop2 = false;
 		};
-
-		void executeRegisterTypeArithmeticOp(const std::string& mnemonic, const std::function<int32_t(uint32_t, uint32_t)>& arithmeticOp, const ArithmeticOpFlags& opFlags);
-		void executeImmediateTypeArithmeticOp(const std::string&  mnemonic, const std::function<int32_t(uint32_t, uint16_t)>& arithmeticOp, bool catchException);
+		template<typename Type, typename ArithmeticOp>
+		void executeRegisterArithmeticOp(const std::string& mnemonic, ArithmeticOp arithmeticOp, const ArithmeticOpFlags& opFlags);
+		//void executeRegisterArithmeticOp(const std::string& mnemonic, const std::function<int32_t(uint32_t, uint32_t)>& arithmeticOp, const ArithmeticOpFlags& opFlags);
+		//void executeImmediateArithmeticOp(const std::string&  mnemonic, const std::function<int32_t(uint32_t, uint16_t)>& arithmeticOp, bool catchException);
+		template<typename Type, typename ArithmeticOp>
+		void executeImmediateArithmeticOp(const std::string&  mnemonic, ArithmeticOp arithmeticOp, bool catchException);
 		void executeBranchOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& branchCondition, bool compareToZero);
 		void executeJumpOp(const std::string& mnemonic);
 		void excecuteJumpRegisterOp(const std::string& mnemonic);
@@ -159,5 +188,6 @@ namespace mips
 		void sll();
 		void sllv();
 		void slt();
+		void slti();
 	};
 }

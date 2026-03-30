@@ -1,4 +1,3 @@
-#include <iostream>
 #include <iomanip>
 
 #include "../inc/debugger.h"
@@ -39,7 +38,7 @@ void psx::Debugger::logPC(uint32_t pc)
 }
 
 // Implement proper sign display
-void psx::Debugger::logRegisterTypeArithmetic(const std::string& mnemonic,
+void psx::Debugger::logRegisterArithmetic(const std::string& mnemonic,
 	                                          uint32_t rd, 
 	                                          uint32_t rs, 
 	                                          uint32_t rt, 
@@ -59,7 +58,7 @@ void psx::Debugger::logRegisterTypeArithmetic(const std::string& mnemonic,
 	}
 }
 
-void psx::Debugger::logRegisterTypeMultiplicativeArithmetic(const std::string& mnemonic, 
+void psx::Debugger::logRegisterMultiplicativeArithmetic(const std::string& mnemonic, 
 	                                                       uint32_t rs, 
 	                                                       uint32_t rt, 
 	                                                       uint32_t hi, 
@@ -80,7 +79,7 @@ void psx::Debugger::logRegisterTypeMultiplicativeArithmetic(const std::string& m
 }
 
 
-void psx::Debugger::logImmediateTypeArithmetic(const std::string& mnemonic,
+void psx::Debugger::logImmediateArithmetic(const std::string& mnemonic,
 	                                           uint32_t rt,
 	                                           uint32_t rs,
 	                                           int16_t immediate,

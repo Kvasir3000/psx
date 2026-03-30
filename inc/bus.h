@@ -54,6 +54,7 @@ namespace psx
 		void or(uint32_t rd, uint32_t rs, uint32_t rt);
 		void ori(uint32_t rt, uint32_t rs, uint16_t immediate);
 		void addi(uint32_t rt, uint32_t rs, int16_t immediate);
+		void add(uint32_t rs, uint32_t rt, int32_t rd);
 		void sb(uint32_t base, uint32_t rt, uint16_t offset);
 		void sh(uint32_t base, uint32_t rt, uint16_t offset);
 		void lb(uint32_t rt, uint32_t base, int16_t offset);
