@@ -28,6 +28,7 @@ namespace mips
 		bool emuCycle();
 
 	private:
+	
 		template<typename Type>
 		struct Register
 		{
@@ -40,7 +41,7 @@ namespace mips
 			std::string name;
 
 			void set_value(Type v) { value = v; }
-		};
+		}; 
 
 		template<typename Type>
 		struct Immediate
@@ -112,7 +113,6 @@ namespace mips
 		{
 			bool catchException;
 			bool isMultiplicative;
-			bool isSigned;
 		};
 
 		struct LoadOpFlags
@@ -123,20 +123,24 @@ namespace mips
 			bool isCop2 = false;
 		};
 		template<typename Type, typename ArithmeticOp>
-		void executeRegisterArithmeticOp(const std::string& mnemonic, ArithmeticOp arithmeticOp, const ArithmeticOpFlags& opFlags);
-		//void executeRegisterArithmeticOp(const std::string& mnemonic, const std::function<int32_t(uint32_t, uint32_t)>& arithmeticOp, const ArithmeticOpFlags& opFlags);
-		//void executeImmediateArithmeticOp(const std::string&  mnemonic, const std::function<int32_t(uint32_t, uint16_t)>& arithmeticOp, bool catchException);
+		void executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, const ArithmeticOpFlags& opFlags);
 		template<typename Type, typename ArithmeticOp>
-		void executeImmediateArithmeticOp(const std::string&  mnemonic, ArithmeticOp arithmeticOp, bool catchException);
+		void executeImmediateArithmeticOp(const std::string&  mnemonic, const ArithmeticOp& arithmeticOp, bool catchException);
 		void executeBranchOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& branchCondition, bool compareToZero);
 		void executeJumpOp(const std::string& mnemonic);
 		void excecuteJumpRegisterOp(const std::string& mnemonic);
 		void executeLoadOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t)>& readOp, const LoadOpFlags& opFlags);
 		void executeLoadWordLROp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t, uint32_t)>& adjustWord);
+		template<typename MovOp>
+		void executeMovHiLo(const std::string& mnemonic, const MovOp& movOp);
 		void executeStoreOp(const std::string& mnemonic, const std::function<void(uint32_t, uint32_t)>& storeOp);
 		void executeShiftOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t&)>& shiftOp, bool isLogical);
-		void executeRegisterSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation);
-		void executeImmediateSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation);
+		template<typename Type, typename SetOp>
+		void executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp);
+		template<typename Type, typename SetOp>
+		void executeImmediateSetOnOp(const std::string& mnemonic, const SetOp& setOp);
+		/*void executeRegisterSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation);
+		void executeImmediateSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation);*/
 
 
 		void add();

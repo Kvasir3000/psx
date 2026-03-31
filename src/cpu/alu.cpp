@@ -73,7 +73,7 @@ void mips::CPU::fillCOPOpcodeTable()
 }
 
 template <typename Type, typename ArithmeticOp>
-void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, ArithmeticOp arithmeticOp, const ArithmeticOpFlags& opFlags)
+void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, const ArithmeticOpFlags& opFlags)
 {
 	uint32_t rd_idx = m_instruction.getRD();
 	uint32_t rs_idx = m_instruction.getRS();
@@ -84,7 +84,7 @@ void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, Arithme
 	Register<Type> rt = Register<Type>(rt_idx, m_registerFile[rt_idx]);
 
 
-	int32_t result = arithmeticOp(rs.value, rt.value);
+	Type result = arithmeticOp(rs.value, rt.value);
 
 	
 	if (m_context->isDebug())
@@ -92,7 +92,7 @@ void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, Arithme
 		if (!opFlags.isMultiplicative)
 		{
 			rd.set_value(result);
-			m_context->getDebugger()->logGenericRegOperation(mnemonic, rd, rs, rt);
+			m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
 		}
 		else
 		{
@@ -113,7 +113,7 @@ void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, Arithme
 
 
 template<typename Type, typename ArithmeticOp>
-void mips::CPU::executeImmediateArithmeticOp(const std::string& mnemonic, ArithmeticOp arithmeticOp, bool catchException)
+void mips::CPU::executeImmediateArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, bool catchException)
 {
 	uint32_t  rs_idx = m_instruction.getRS();
 	uint32_t  rt_idx = m_instruction.getRT();
@@ -122,11 +122,11 @@ void mips::CPU::executeImmediateArithmeticOp(const std::string& mnemonic, Arithm
 	Register<Type>  rt = Register<Type>(rt_idx, m_registerFile[rt_idx]);
 	Immediate<Type> immediate = Immediate<Type>(m_instruction.getImmediate());
 
-	int32_t result = arithmeticOp(m_registerFile[rs.value], immediate.value);
+	Type result = arithmeticOp(rs.value, immediate.value);
 	if (m_context->isDebug())
 	{
 		rt.set_value(result);
-		m_context->getDebugger()->logGenericRegOperation(mnemonic, rt, rs, immediate);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rs, immediate);
 	}
 
 	if (catchException && checkOverflow(m_registerFile[rs_idx], immediate.value, result))
@@ -256,6 +256,18 @@ void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const std::func
 	m_registerFile[rt] = result;
 }
 
+template<typename MovOp>
+void mips::CPU::executeMovHiLo(const std::string& mnemonic, const MovOp& movOp)
+{
+	uint32_t register_idx = movOp();
+
+	if (m_context->isDebug())
+	{
+		Register<uint32_t> reg = Register<uint32_t>(register_idx, m_registerFile[register_idx]);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, reg);
+	}
+}
+
 void mips::CPU::executeStoreOp(const std::string& mnemonic, const std::function<void(uint32_t, uint32_t)>& storeOp)
 {
 	uint32_t rt = m_instruction.getRT();
@@ -297,27 +309,33 @@ void mips::CPU::executeShiftOp(const std::string& mnemonic, const std::function<
 	m_registerFile[rd] = result;
 }
 
-void mips::CPU::executeRegisterSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation)
+template <typename Type, typename SetOp>
+void mips::CPU::executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp)
 {
-	uint32_t rt = m_instruction.getRT();
-	uint32_t rs = m_instruction.getRS();
-	uint32_t rd = m_instruction.getRD();
+	uint32_t rt_idx = m_instruction.getRT();
+	uint32_t rs_idx = m_instruction.getRS();
+	uint32_t rd_idx = m_instruction.getRD();
 
-	m_registerFile[rd] = setOperation(m_registerFile[rt], m_registerFile[rs]);
+	Register<Type> rt = Register<Type>(rt_idx, m_registerFile[rt_idx]);
+	Register<Type> rs = Register<Type>(rs_idx, m_registerFile[rs_idx]);
+	Register<Type> rd = Register<Type>(rd_idx, m_registerFile[rd_idx]);
+
+	m_registerFile[rd_idx] = setOp(rt.value, rs.value);
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logRegisterSetOn(mnemonic, rd, rs, rt, m_registerFile[rd], m_registerFile[rs], m_registerFile[rt]);
+		rd.set_value(m_registerFile[rd_idx]);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
 	}
 }
-
-void mips::CPU::executeImmediateSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation)
+template <typename Type, typename SetOp>
+void mips::CPU::executeImmediateSetOnOp(const std::string& mnemonic, const SetOp& setOp)
 {
 	uint32_t rt = m_instruction.getRT();
 	uint32_t rs = m_instruction.getRS();
 	int32_t  immediate = m_instruction.getImmediate();
 
-	m_registerFile[rt] = setOperation(m_registerFile[rs], immediate);
+	m_registerFile[rt] = setOp(m_registerFile[rs], immediate);
 
 	 // have to implement logging
 }
@@ -326,7 +344,7 @@ void mips::CPU::executeImmediateSetOnOp(const std::string& mnemonic, const std::
 void mips::CPU::add()
 {
 	auto addOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 + operand2; };
-	ArithmeticOpFlags opFlags = { true, false, true };
+	ArithmeticOpFlags opFlags = { true, false };
 	executeRegisterArithmeticOp<int32_t>("add", addOp, opFlags);
 } 
 
@@ -345,14 +363,14 @@ void mips::CPU::addiu()
 void mips::CPU::addu()
 {
 	auto addOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 + operand2; };
-	ArithmeticOpFlags opFlags = { false, false, true };
+	ArithmeticOpFlags opFlags = { false, false };
 	executeRegisterArithmeticOp<uint32_t>("addu", addOp, opFlags);
 }
 
 void mips::CPU::and_()
 {
 	auto andOp = [](uint32_t operand1, uint32_t operand2)->int32_t { return operand1 & operand2; };
-	ArithmeticOpFlags opFlags = { false, false, false };
+	ArithmeticOpFlags opFlags = { false, false };
 	executeRegisterArithmeticOp<uint32_t>("and", andOp, opFlags);
 }
 
@@ -467,7 +485,7 @@ void mips::CPU::div()
 			}
 			return 0;
 	};
-	ArithmeticOpFlags opFlags = { false, true, true };
+	ArithmeticOpFlags opFlags = { false, true };
 	executeRegisterArithmeticOp<int32_t>("div", divideOp, opFlags);
 }
 
@@ -486,7 +504,7 @@ void mips::CPU::divu()
 			}
 			return 0;
 	};
-	ArithmeticOpFlags opFlags = { false, true, false };
+	ArithmeticOpFlags opFlags = { false, true };
 	executeRegisterArithmeticOp<uint32_t>("divu", divideOp, opFlags);
 }
 
@@ -606,81 +624,66 @@ void mips::CPU::lwr()
 
 void mips::CPU::mfc()
 {
-	uint32_t rd = m_instruction.getRD();
-	uint32_t rt = m_instruction.getRT();
-	m_registerFile[rt] = (m_instruction.getCOPIdx() == 0) ? m_cop0.readDataRegister(rd) : m_gte.readDataRegister(rd);
+	uint32_t rd_idx = m_instruction.getRD();
+	uint32_t rt_idx = m_instruction.getRT();
+	m_registerFile[rt_idx] = (m_instruction.getCOPIdx() == 0) ? m_cop0.readDataRegister(rd_idx) : m_gte.readDataRegister(rd_idx);
 
 	if (m_context->isDebug())
 	{
 		std::string mnemonic = (m_instruction.getCOPIdx() == 0)? "mfc0" : "mfc2";
-		m_context->getDebugger()->logMove(mnemonic, rt, rd, m_registerFile[rt]);
+		Register<uint32_t> rd = Register<uint32_t>(rd_idx, m_registerFile[rt_idx]); // to keep logs simpler read from rt intentionally
+		Register<uint32_t> rt = Register<uint32_t>(rt_idx, m_registerFile[rt_idx]);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rd);
 	}
 	raiseException("Coprocessor unusable");
 }
 
 void mips::CPU::mfhi()
 {
-	uint32_t rd = m_instruction.getRD();
-	m_registerFile[rd] = m_hi;
-
-	if (m_context->isDebug())
-	{
-		m_context->getDebugger()->logMove("mfhi", rd, HI, m_hi);
-	}
+	auto movFromHiOp = [this]()->uint32_t {	uint32_t rd_idx = m_instruction.getRD(); m_registerFile[rd_idx] = m_hi; return rd_idx; };
+	executeMovHiLo("mfhi", movFromHiOp);
 }
 
 void mips::CPU::mflo()
 {
-	uint32_t rd = m_instruction.getRD();
-	m_registerFile[rd] = m_lo;
-
-	if (m_context->isDebug())
-	{
-		m_context->getDebugger()->logMove("mflo", rd, LO, m_lo);
-	}
+	auto movFromLoOp = [this]()->uint32_t {	uint32_t rd_idx = m_instruction.getRD(); m_registerFile[rd_idx] = m_lo; return rd_idx; };
+	executeMovHiLo("mflo", movFromLoOp);
 }
 
 void mips::CPU::mtc()
 {
-	uint32_t rd = m_instruction.getRD();
-	uint32_t rt = m_instruction.getRT();
+	uint32_t rd_idx = m_instruction.getRD();
+	uint32_t rt_idx = m_instruction.getRT();
+
 	if (m_instruction.getCOPIdx() == 0)
 	{
-		m_cop0.writeDataRegister(rd, m_registerFile[rt]);
+		m_cop0.writeDataRegister(rd_idx, m_registerFile[rt_idx]);
 	}
 	else
 	{
-		m_gte.writeDataRegister(rd, m_registerFile[rt]);
+		m_gte.writeDataRegister(rd_idx, m_registerFile[rt_idx]);
 	}
 	
 	if (m_context->isDebug())
 	{
 		std::string mnemonic = (m_instruction.getCOPIdx() == 0) ? "mtc0" : "mtc2";
-		m_context->getDebugger()->logMove(mnemonic, rd, rt, m_registerFile[rt]);
+		Register<uint32_t> rd = Register<uint32_t>(rd_idx, m_registerFile[rt_idx]); // to keep logs simpler read from rd intentionally
+		Register<uint32_t> rt = Register<uint32_t>(rt_idx, m_registerFile[rt_idx]); 
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rt);
 	}
 	raiseException("Coprocessor unusable");
 }
 
 void mips::CPU::mthi()
 {
-	uint32_t rs = m_instruction.getRS();
-	m_hi = m_registerFile[rs];
-
-	if (m_context->isDebug())
-	{
-		m_context->getDebugger()->logMoveToHiLo("mthi", HI, rs, m_registerFile[rs]);
-	}
+	auto movToHiOp = [this]()->uint32_t { uint32_t rs_idx = m_instruction.getRS(); m_hi = m_registerFile[rs_idx]; return rs_idx; };
+	executeMovHiLo("mthi", movToHiOp);
 }
 
 void mips::CPU::mtlo()
 {
-	uint32_t rs = m_instruction.getRS();
-	m_lo = m_registerFile[rs];
-
-	if (m_context->isDebug())
-	{
-		m_context->getDebugger()->logMoveToHiLo("mtlo", LO, rs, m_registerFile[rs]);
-	}
+	auto movToLoOp = [this]()->uint32_t { uint32_t rs_idx = m_instruction.getRS(); m_lo = m_registerFile[rs_idx]; return rs_idx; };
+	executeMovHiLo("mtlo", movToLoOp);
 }
 
 void mips::CPU::mult()
@@ -693,7 +696,7 @@ void mips::CPU::mult()
 
 		 return 0;
 	};
-	ArithmeticOpFlags opFlags = { false, true, true };
+	ArithmeticOpFlags opFlags = { false, true };
 	executeRegisterArithmeticOp<int32_t>("mult", multiplyOp, opFlags);
 }
 
@@ -707,21 +710,21 @@ void mips::CPU::multu()
 
 		return 0;
 	};
-	ArithmeticOpFlags opFlags = { false, true, false };
+	ArithmeticOpFlags opFlags = { false, true };
 	executeRegisterArithmeticOp<uint32_t>("multu", multiplyOp, opFlags);
 }
 
 void mips::CPU::nor()
 {
 	auto norOp = [](uint32_t operand1, uint32_t operand2)->uint32_t { return ~(operand1 | operand2); };
-	ArithmeticOpFlags opFlags = { false, false, false };
+	ArithmeticOpFlags opFlags = { false, false };
 	executeRegisterArithmeticOp<uint32_t>("nor", norOp, opFlags);
 }
 
 void mips::CPU::or()
 {
 	auto orOp = [](uint32_t operand1, uint32_t operand2)->uint32_t { return operand1 | operand2; };
-	ArithmeticOpFlags opFlags = { false, false, false };
+	ArithmeticOpFlags opFlags = { false, false };
 	executeRegisterArithmeticOp<uint32_t>("or", orOp, opFlags);
 }
 
@@ -755,28 +758,15 @@ void mips::CPU::sllv()
 	executeShiftOp("sllv", shiftLeftVariableOp, false);
 }
 
-template<typename RegType>
-uint32_t slt_imp(RegType r1, RegType r2)
-{
-	return (r1 - r2) > 0;
-}
-
 void mips::CPU::slt()
 {
-	auto setOnLessThanOp = [](int32_t rt, int32_t rs)->bool { return (rs - rt) > 0;  };
-	int32_t rt = m_instruction.getRT();
-	int32_t rs = m_instruction.getRS();
-	m_registerFile[m_instruction.getRD()] = slt_imp<int32_t>(rs, rt);
-	executeRegisterSetOnOp("slt", setOnLessThanOp);
+	auto setOnLessThanOp = [](int32_t rt, int32_t rs)->bool { return rs < rt;  };
+	executeRegisterSetOnOp<int32_t>("slt", setOnLessThanOp);
 }
 
 void mips::CPU::slti()
 {
-	// This is not fully implemented the last thing that you tried to do is to rewrite the debugging system to make it more generic, 
-	// the idea is to introduce a commong interface that should cover most of the generic register operations both signed and usnigned 
-	//  I can use template<> for this, for example  
-	//  template<typename Type> void log(Type t) {log << t.value} can work both for register and immediate, if immediate contains a numeric represantion of the value
-	auto setOnLessThanImmOp = [](int32_t rs, int32_t immediate)->bool { return (rs - immediate); };
-	executeRegisterSetOnOp("slt", setOnLessThanImmOp);
+	auto setOnLessThanImmOp = [](int32_t rs, int32_t immediate)->bool { return rs < immediate; };
+	executeRegisterSetOnOp<int32_t>("slti", setOnLessThanImmOp);
 }
 

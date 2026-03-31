@@ -12,8 +12,8 @@ psx::BUS::BUS()
 	//testLoadOperations();
 	//testLoadCOP2();
 	//testLoadWLR();
-	//testMove();
-	testArithmeticOperations();
+	testMove();
+	//testArithmeticOperations();
 	//testStore();
 	//testSetOn();
 	endProgram();
@@ -163,7 +163,7 @@ void psx::BUS::sh(uint32_t base, uint32_t rt, uint16_t offset)
 void psx::BUS::lb(uint32_t rt, uint32_t base, int16_t offset)
 {
 	InstructionDescriptor instruction = { 0 };
-	instruction.primaryOpcode = LW;
+	instruction.primaryOpcode = LB;
 	instruction.base = base;
 	instruction.offset = offset;
 	instruction.rt = rt;

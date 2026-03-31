@@ -37,58 +37,6 @@ void psx::Debugger::logPC(uint32_t pc)
 	OUTPUT_STREAM << "PC=0x" << SET_ADDRES_STYLE << pc << "-> " << std::dec;
 }
 
-// Implement proper sign display
-void psx::Debugger::logRegisterArithmetic(const std::string& mnemonic,
-	                                          uint32_t rd, 
-	                                          uint32_t rs, 
-	                                          uint32_t rt, 
-	                                          uint32_t result,
-	                                          uint32_t rsSrc, 
-	                                          uint32_t rtSrc, 
-	                                          bool sign)
-{
-	OUTPUT_STREAM << mnemonic << " r" << rd << "," << LOG_RS_RT << " // ";
-	if (sign)
-	{
-		OUTPUT_STREAM << static_cast<int32_t>(result) << ", " << LOG_SRC_RS_RT_SIGNED << "\n";
-	}
-	else
-	{
-		OUTPUT_STREAM << result << ", " << LOG_SRC_RS_RT << "\n";
-	}
-}
-
-void psx::Debugger::logRegisterMultiplicativeArithmetic(const std::string& mnemonic, 
-	                                                       uint32_t rs, 
-	                                                       uint32_t rt, 
-	                                                       uint32_t hi, 
-	                                                       uint32_t lo, 
-	                                                       uint32_t rsSrc, 
-	                                                       uint32_t rtSrc,
-	                                                       bool sign)
-{
-	OUTPUT_STREAM << mnemonic << LOG_RS_RT << " // ";
-	if (sign)
-	{
-		OUTPUT_STREAM << LOG_HI_LO_SIGNED << ", " << LOG_SRC_RS_RT_SIGNED << "\n";
-	}
-	else
-	{
-		OUTPUT_STREAM << LOG_HI_LO << ", " << LOG_SRC_RS_RT << "\n";
-	}
-}
-
-
-void psx::Debugger::logImmediateArithmetic(const std::string& mnemonic,
-	                                           uint32_t rt,
-	                                           uint32_t rs,
-	                                           int16_t immediate,
-	                                           int32_t result,
-	                                           int32_t rsSrc)
-{
-	OUTPUT_STREAM << mnemonic << LOG_RS_RT << ", " << immediate << " // " << result << ", " << rsSrc << ", " << immediate << "\n";
-}
-
 void psx::Debugger::logBranch(const std::string& mnemonic, 
 	                          uint32_t rt, 
 	                          uint32_t rs, 
@@ -192,11 +140,6 @@ void psx::Debugger::logMove(const std::string& mnemonic, uint32_t rt, uint32_t r
 	}
 }
 
-void psx::Debugger::logMoveToHiLo(const std::string& mnemonic, uint32_t dstRegister, uint32_t rs, uint32_t rsSrc)
-{
-	OUTPUT_STREAM << mnemonic << " " << ((dstRegister == HI) ? "hi" : "lo") << ", r" << rs << " // " << rsSrc << "\n";
-}
-
 void psx::Debugger::logShiftLogical(const std::string& mnemonic, 
 	                               uint32_t rd, 
 	                               uint32_t rt, 
@@ -216,9 +159,4 @@ void psx::Debugger::logShiftVariable(const std::string& mnemonic,
 	                                uint32_t rsSrc)
 {
 	OUTPUT_STREAM << mnemonic << " r" << rd << ", r" << rt << ", r" << rs << " // " << rdSrc << ", " << rtSrc << ", " << rsSrc << "\n";
-}
-
-void psx::Debugger::logRegisterSetOn(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t rs, uint32_t rdSrc, uint32_t rtSrc, uint32_t rsSrc)
-{
-	OUTPUT_STREAM << mnemonic << " r" << rd << ", r" << rs << ", r" << rt << " // " << rdSrc << ", " << rsSrc << ", " << rtSrc << "\n";
 }

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string>
 #include <iostream>
-
+#include <optional>
 
 #include "../inc/constants/debugger_constants.h"
 
@@ -43,10 +43,8 @@ namespace psx
 		void logDelayedBranch();
 		void logDelayedLoad(uint32_t rt, uint32_t rtSrc, bool sign, bool byte, bool halfword);
 		void logMove(const std::string& mnemonic, uint32_t rt, uint32_t rd, int32_t rdSrc);
-		void logMoveToHiLo(const std::string& mnemonic, uint32_t dstRegister, uint32_t rs, uint32_t rsSrc);
 		void logShiftLogical(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t shift, uint32_t rdSrc, uint32_t rtSrc);
 		void logShiftVariable(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t rs, uint32_t rdSrc, uint32_t rtSrc, uint32_t rsSrc);
-		void logRegisterSetOn(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t rs, uint32_t rdSrc, uint32_t rtSrc, uint32_t rsSrc);
 		
 		template<uint32_t N>
 		void logDecodedAssembly(const std::string& mnemonic, const std::array<std::string, N>& operands) const
@@ -77,7 +75,7 @@ namespace psx
 		}
 
 		template<typename ...Operands>
-		void logGenericRegOperation(const std::string& mnemonic, Operands... ops) const
+		void logGenericRegOp(const std::string& mnemonic, Operands... ops) const
 		{
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... };
 			logDecodedAssembly(mnemonic, operands);
@@ -93,7 +91,8 @@ namespace psx
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... }; 
 
 			logDecodedAssembly(mnemonic, operands);
-			OUTPUT_STREAM << " // hi = " << hi << " lo = " << lo << ", ";
+			OUTPUT_STREAM << " // hi = 0x" << std::hex << hi << "(" << std::dec << hi << ")";
+			OUTPUT_STREAM << " lo = 0x" << std::hex << lo << "(" << std::dec << lo << "), ";
 			logDecodedValues(ops.value ...);
 		}
 	};
