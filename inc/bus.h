@@ -51,9 +51,7 @@ namespace psx
 		void addInstruction(InstructionDescriptor instruction);
 		void addNOP();
 		void endProgram();
-		
-
-
+	
 
 		// Testing programs
 		void testLoadOperations();
