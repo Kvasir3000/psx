@@ -107,4 +107,60 @@ namespace testing
 			m_memory[103] = 0xAA;
 		}
 	};
+
+	class TestLoadOperations : public Test
+	{
+	public:
+		TestLoadOperations() : Test("TEST_LOAD_OPERATIONS")
+		{
+			initRegister(7, 0x102);
+			lb(2, 7, -2);
+			lbu(7, 9, -2);
+			initRegister(2, 18);
+			initRegister(9, 20);
+			initRegister(12, 0xFE);
+			lh(12, 12, 3);
+			lbu(12, 12, 3);
+			addi(12, 12, 522);
+			addi(12, 12, 522);
+			addi(3, 3, -12);
+			add(2, 3, 3);
+			add(9, 3, 3);
+			addi(13, 13, 0x100);
+			lw(19, 13, 3);
+			nop();
+			nop();
+			endProgram();
+
+			m_memory[0x100] = -4;
+			// 542:
+			/*m_memory[0x101] = 2;
+			m_memory[0x102] = 30*/;
+
+			//-542:
+			m_memory[0x101] = 0xFD;
+			m_memory[0x102] = 0xE2;
+
+			// Data for load word instruction: 3224372736
+			m_memory[0x103] = 0;
+			m_memory[0x104] = 6;
+			m_memory[0x105] = 48;
+			m_memory[0x106] = 192;
+		}
+	};
+
+	class TestLoadCOP2 : public Test
+	{
+	public:
+		// Load 314 into COP2 data register 12 (SXY0)
+		TestLoadCOP2() : Test("TEST_LOAD_COP2")
+		{
+			lwc2(12, 0, 100);
+			mfc(4, 12, 2);
+			addi(4, 4, -10);
+			// 314
+			m_memory[100] = 58;
+			m_memory[101] = 1;
+		}
+	};
 }

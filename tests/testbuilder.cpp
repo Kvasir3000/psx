@@ -22,7 +22,6 @@ namespace testing
 		return *this;
 	}
 
-
 	TestBuilder TestBuilder::addTestSetOn()
 	{
 		TestSetOn test;
@@ -44,9 +43,15 @@ namespace testing
 		return *this;
 	}
 
+	TestBuilder TestBuilder::addTestLoadOperations()
+	{
+		TestLoadOperations test;
+		m_tests.emplace_back((Test)test);
+		return *this;
+	}
+
 	const std::vector<Test>& TestBuilder::build()
 	{
 		return m_tests;
 	}
-
 }
