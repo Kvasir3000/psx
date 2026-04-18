@@ -16,6 +16,7 @@ private:
 	std::string m_name; 
 
 	void addRTBaseOffsetOp(uint32_t opcode, uint32_t rt, uint32_t base, int16_t offset);
+	void addRSRTOp(uint32_t opcode, uint32_t rs, uint32_t rt);
 public:
 	Test(std::string name);
 
@@ -61,10 +62,12 @@ public:
 	void sb(uint32_t base, uint32_t rt, uint16_t offset);
 	void sh(uint32_t base, uint32_t rt, uint16_t offset);
 	void lb(uint32_t rt, uint32_t base, int16_t offset);
+	void lbu(uint32_t rt, uint32_t base, int16_t offset);
 	void lh(uint32_t rt, uint32_t base, int16_t offset);
 	void lw(uint32_t rt, uint32_t base, int16_t offset);
 	void lwl(uint32_t rt, uint32_t base, int16_t offset);
 	void lwr(uint32_t rt, uint32_t base, int16_t offset);
+	void lwc2(uint32_t rt, uint32_t base, int16_t offset);
 	void sll(uint32_t rd, uint32_t rt, uint32_t sa);
 	void sllv(uint32_t rd, uint32_t rt, uint32_t rs);
 	void slt(uint32_t rd, uint32_t rs, uint32_t rt);

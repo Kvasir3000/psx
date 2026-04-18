@@ -8,6 +8,25 @@ namespace testing
 
 	}
 
+	void Test::addRTBaseOffsetOp(uint32_t opcode, uint32_t rt, uint32_t base, int16_t offset)
+	{
+		InstructionDescriptor instruction = { 0 };
+		instruction.primaryOpcode = opcode;
+		instruction.base = base;
+		instruction.offset = offset;
+		instruction.rt = rt;
+		addInstruction(instruction);
+	}
+
+	void Test::addRSRTOp(uint32_t opcode, uint32_t rs, uint32_t rt)
+	{
+		InstructionDescriptor instruction = { 0 };
+		instruction.secondaryOpcode = opcode;
+		instruction.rs = rs;
+		instruction.rt = rt;
+		addInstruction(instruction);
+	}
+
 	std::string Test::getName() 
 	{
 		return m_name; 
@@ -77,20 +96,12 @@ namespace testing
 
 	void Test::mlt(uint32_t rs, uint32_t rt)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = MULT;
-		instruction.rs = 3;
-		instruction.rt = 2;
-		addInstruction(instruction);
+		addRSRTOp(MULT, rs, rt);
 	}
 
 	void Test::mltu(uint32_t rs, uint32_t rt)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = MULTU;
-		instruction.rs = 3;
-		instruction.rt = 2;
-		addInstruction(instruction);
+		addRSRTOp(MULTU, rs, rt);
 	}
 
 	void Test::nor(uint32_t rd, uint32_t rs, uint32_t rt)
@@ -123,7 +134,6 @@ namespace testing
 		addInstruction(instruction);
 	}
 
-
 	void Test::addi(uint32_t rt, uint32_t rs, int16_t immediate)
 	{
 		InstructionDescriptor instruction = { 0 };
@@ -136,11 +146,7 @@ namespace testing
 
 	void Test::div(uint32_t rs, uint32_t rt)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = DIV;
-		instruction.rs = rs;
-		instruction.rt = rt;
-		addInstruction(instruction);
+		addRSRTOp(DIV, rs, rt);
 	}
 
 	void Test::add(uint32_t rs, uint32_t rt, int32_t rd)
@@ -173,21 +179,17 @@ namespace testing
 		addInstruction(instruction);
 	}
 
-	void Test::addRTBaseOffsetOp(uint32_t opcode, uint32_t rt, uint32_t base, int16_t offset)
-	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.primaryOpcode = opcode;
-		instruction.base = base;
-		instruction.offset = offset;
-		instruction.rt = rt;
-		addInstruction(instruction);
-	}
 
 	void Test::lb(uint32_t rt, uint32_t base, int16_t offset)
 	{
 		addRTBaseOffsetOp(LB, rt, base, offset);
 	}
 
+	void Test::lbu(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRTBaseOffsetOp(LBU, rt, base, offset);
+	}
+	
 	void Test::lh(uint32_t rt, uint32_t base, int16_t offset)
 	{
 		addRTBaseOffsetOp(LH, rt, base, offset);
@@ -206,6 +208,11 @@ namespace testing
 	void Test::lwr(uint32_t rt, uint32_t base, int16_t offset)
 	{
 		addRTBaseOffsetOp(LWR, rt, base, offset);
+	}
+	
+	void Test::lwc2(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRTBaseOffsetOp(LWC2, rt, base, offset);
 	}
 
 	void Test::sll(uint32_t rd, uint32_t rt, uint32_t sa)
