@@ -31,9 +31,6 @@ namespace psx
 
 		void setPC(uint32_t pc);
 		void logPC(uint32_t pc);
-		void logRegisterArithmetic(const std::string& mnemonic, uint32_t rd, uint32_t rs, uint32_t rt, uint32_t result, uint32_t rsSrc, uint32_t rtSrc, bool sign);
-		void logRegisterMultiplicativeArithmetic(const std::string& mnemonic, uint32_t rs, uint32_t rt, uint32_t hi, uint32_t lo, uint32_t rsSrc, uint32_t rtSrc, bool sign);
-		void logImmediateArithmetic(const std::string& mnemonic, uint32_t rt, uint32_t rs, int16_t immediate, int32_t result, int32_t rsSrc);
 		void logBranch(const std::string& mnemonic, uint32_t rt, uint32_t rs, int16_t offset, bool jump, uint32_t targetAddress, int32_t rsSrc, int32_t rtSrc, bool compareToZero);
 		void logJump(const std::string& mnemonic, uint32_t targetAddress);
 		void logJumpRegister(const std::string& mnemonic, uint32_t rs, uint32_t rsSrc);
