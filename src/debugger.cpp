@@ -129,7 +129,7 @@ void psx::Debugger::logDelayedLoad(uint32_t rt, uint32_t rtSrc, bool sign, bool 
 
 void psx::Debugger::logMove(const std::string& mnemonic, uint32_t rt, uint32_t rd, int32_t rdSrc)
 {
-	if _UNLIKELY((rd == HI || rd == LO))
+	if (rd == HI || rd == LO)
 	{
 
 		OUTPUT_STREAM << mnemonic << " r" << rt << ", " << ((rd == HI) ? "hi" : "lo") << " // " << rdSrc << "\n";

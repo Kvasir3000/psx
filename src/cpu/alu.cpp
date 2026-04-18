@@ -47,7 +47,7 @@ void mips::CPU::fillSecondaryOpcodeTable()
 	m_secondaryOpcodeTable[MULT]  = std::bind(&CPU::mult,   this);
 	m_secondaryOpcodeTable[MULTU] = std::bind(&CPU::multu,  this);
 	m_secondaryOpcodeTable[NOR]   = std::bind(&CPU::nor,    this);
-	m_secondaryOpcodeTable[OR]    = std::bind(&CPU::or,     this);
+	m_secondaryOpcodeTable[OR]    = std::bind(&CPU::_or,     this);
 	m_secondaryOpcodeTable[SLL]   = std::bind(&CPU::sll,    this);
 	m_secondaryOpcodeTable[SLLV]  = std::bind(&CPU::sllv,   this);
 	m_secondaryOpcodeTable[SLT]   = std::bind(&CPU::slt,    this);
@@ -309,6 +309,7 @@ void mips::CPU::executeShiftOp(const std::string& mnemonic, const std::function<
 	m_registerFile[rd] = result;
 }
 
+
 template <typename Type, typename SetOp>
 void mips::CPU::executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp)
 {
@@ -328,18 +329,26 @@ void mips::CPU::executeRegisterSetOnOp(const std::string& mnemonic, const SetOp&
 		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
 	}
 }
+
 template <typename Type, typename SetOp>
 void mips::CPU::executeImmediateSetOnOp(const std::string& mnemonic, const SetOp& setOp)
 {
-	uint32_t rt = m_instruction.getRT();
-	uint32_t rs = m_instruction.getRS();
-	int32_t  immediate = m_instruction.getImmediate();
+	uint32_t rt_idx = m_instruction.getRT();
+	uint32_t rs_idx = m_instruction.getRS();
+	uint32_t rd_idx = m_instruction.getRD();
 
-	m_registerFile[rt] = setOp(m_registerFile[rs], immediate);
+	Register<Type> rt = Register<Type>(rt_idx, m_registerFile[rt_idx]);
+	Register<Type> rs = Register<Type>(rs_idx, m_registerFile[rs_idx]);
+	Register<Type> rd = Register<Type>(rd_idx, m_registerFile[rd_idx]);
 
-	 // have to implement logging
+	m_registerFile[rd_idx] = setOp(rt.value, rs.value);
+
+	if (m_context->isDebug())
+	{
+		rd.set_value(m_registerFile[rd_idx]);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
+	}
 }
-
 
 void mips::CPU::add()
 {
@@ -437,13 +446,17 @@ void mips::CPU::break_()
 
 void mips::CPU::cfc2()
 {
-	uint32_t rd = m_instruction.getRD();
-	uint32_t rt = m_instruction.getRT();
-	m_registerFile[rt] = m_gte.readControlRegister(rd);
+	uint32_t rd_idx = m_instruction.getRD();
+	uint32_t rt_idx = m_instruction.getRT();
+	m_registerFile[rt_idx] = m_gte.readControlRegister(rd_idx);
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logMove("cfc2", rt, rd, m_registerFile[rt]);
+		Register<uint32_t> rt = Register<uint32_t>(rt_idx, m_registerFile[rt_idx]);
+		Register<uint32_t> rd = Register<uint32_t>(rd_idx, m_registerFile[rt_idx]); 
+
+		//m_context->getDebugger()->logGenericRegOp("cfc2", rt, rd);
+		m_context->getDebugger()->logMove("cfc2", rt_idx, rd_idx, m_registerFile[rt_idx]);
 	}
 	raiseException("Coprocessor unusable");
 }
@@ -621,7 +634,7 @@ void mips::CPU::lwr()
 
 	executeLoadWordLROp("lwr", adjustLWROp);
 }
-
+ 
 void mips::CPU::mfc()
 {
 	uint32_t rd_idx = m_instruction.getRD();
@@ -721,7 +734,7 @@ void mips::CPU::nor()
 	executeRegisterArithmeticOp<uint32_t>("nor", norOp, opFlags);
 }
 
-void mips::CPU::or()
+void mips::CPU::_or()
 {
 	auto orOp = [](uint32_t operand1, uint32_t operand2)->uint32_t { return operand1 | operand2; };
 	ArithmeticOpFlags opFlags = { false, false };

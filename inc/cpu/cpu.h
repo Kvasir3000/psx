@@ -26,6 +26,7 @@ namespace mips
 		~CPU();
 
 		bool emuCycle();
+		void reset();
 
 	private:
 	
@@ -185,7 +186,7 @@ namespace mips
 		void mult();
 		void multu();
 		void nor();
-		void or();
+		void _or();
 		void ori();
 		void sb();
 		void sh();
