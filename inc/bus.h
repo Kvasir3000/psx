@@ -28,29 +28,6 @@ namespace psx
 
 		static constexpr uint32_t MEMORY_SIZE = 300;
 		uint8_t m_memory[MEMORY_SIZE] = { 0 };
-		struct InstructionDescriptor
-		{
-			uint8_t  sa; 
-			int16_t  immediate;
-			int16_t  offset;
-			uint16_t rt : 5;
-			uint16_t regimmType : 5;
-			uint16_t rs : 5;
-			uint16_t copSuboperation;
-			uint16_t copIdx;
-			uint16_t primaryOpcode : 6;
-			uint16_t secondaryOpcode : 6;
-			uint16_t rd : 5;
-			uint16_t base : 5;
-			uint32_t target : 28;
-
-			bool     copCofun;
-			bool     copOp;
-		};
-
-		void addInstruction(InstructionDescriptor instruction);
-		void addNOP();
-		void endProgram();
 	
 
 		// Testing programs

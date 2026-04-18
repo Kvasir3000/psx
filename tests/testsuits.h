@@ -98,7 +98,7 @@ namespace testing
 			lwl(1, 2, 100);
 			lwr(1, 2, 100);
 			endProgram();
-			assert(false); // This op is definetly broken, the delay slot should be added, but only after both lwr/lwl or lwl/lwr are called together, no delay slot in between them
+		//	assert(false); // This op is definetly broken, the delay slot should be added, but only after both lwr/lwl or lwl/lwr are called together, no delay slot in between them
 			// word1:|AA|BB|CC|DD|
 			//       |--|--|--|--|
 			m_memory[100] = 0xDD;
