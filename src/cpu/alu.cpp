@@ -75,13 +75,13 @@ void mips::CPU::fillCOPOpcodeTable()
 template <typename Type, typename ArithmeticOp>
 void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, const ArithmeticOpFlags& opFlags)
 {
-	uint32_t rd_idx = m_instruction.getRD();
-	uint32_t rs_idx = m_instruction.getRS();
-	uint32_t rt_idx = m_instruction.getRT();
+	uint32_t rdIdx = m_instruction.getRD();
+	uint32_t rsIdx = m_instruction.getRS();
+	uint32_t rtIdx = m_instruction.getRT();
 
-	Register<Type> rd = Register<Type>(rd_idx, m_registerFile[rd_idx]);
-	Register<Type> rs = Register<Type>(rs_idx, m_registerFile[rs_idx]);
-	Register<Type> rt = Register<Type>(rt_idx, m_registerFile[rt_idx]);
+	Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
+	Register<Type> rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
+	Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
 
 
 	Type result = arithmeticOp(rs.value, rt.value);
@@ -107,7 +107,7 @@ void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, const A
 
 	if (!opFlags.isMultiplicative) // In case of mul/div results are stored from lambda function
 	{
-		m_registerFile[rd_idx] = static_cast<uint32_t>(result);
+		m_registerFile[rdIdx] = static_cast<uint32_t>(result);
 	}
 }
 
@@ -115,11 +115,11 @@ void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, const A
 template<typename Type, typename ArithmeticOp>
 void mips::CPU::executeImmediateArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, bool catchException)
 {
-	uint32_t  rs_idx = m_instruction.getRS();
-	uint32_t  rt_idx = m_instruction.getRT();
+	uint32_t  rsIdx = m_instruction.getRS();
+	uint32_t  rtIdx = m_instruction.getRT();
 
-	Register<Type>  rs = Register<Type>(rs_idx, m_registerFile[rs_idx]);
-	Register<Type>  rt = Register<Type>(rt_idx, m_registerFile[rt_idx]);
+	Register<Type>  rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
+	Register<Type>  rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
 	Immediate<Type> immediate = Immediate<Type>(m_instruction.getImmediate());
 
 	Type result = arithmeticOp(rs.value, immediate.value);
@@ -129,12 +129,12 @@ void mips::CPU::executeImmediateArithmeticOp(const std::string& mnemonic, const 
 		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rs, immediate);
 	}
 
-	if (catchException && checkOverflow(m_registerFile[rs_idx], immediate.value, result))
+	if (catchException && checkOverflow(m_registerFile[rsIdx], immediate.value, result))
 	{
 		raiseException("Integer overflow");
 	}
 
-	m_registerFile[rt_idx] = static_cast<uint32_t>(result);
+	m_registerFile[rtIdx] = static_cast<uint32_t>(result);
 }
 
 void mips::CPU::executeBranchOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& branchCondition, bool compareToZero)
@@ -259,11 +259,11 @@ void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const std::func
 template<typename MovOp>
 void mips::CPU::executeMovHiLo(const std::string& mnemonic, const MovOp& movOp)
 {
-	uint32_t register_idx = movOp();
+	uint32_t regIdx = movOp();
 
 	if (m_context->isDebug())
 	{
-		Register<uint32_t> reg = Register<uint32_t>(register_idx, m_registerFile[register_idx]);
+		Register<uint32_t> reg = Register<uint32_t>(regIdx, m_registerFile[regIdx]);
 		m_context->getDebugger()->logGenericRegOp(mnemonic, reg);
 	}
 }
@@ -313,19 +313,19 @@ void mips::CPU::executeShiftOp(const std::string& mnemonic, const std::function<
 template <typename Type, typename SetOp>
 void mips::CPU::executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp)
 {
-	uint32_t rt_idx = m_instruction.getRT();
-	uint32_t rs_idx = m_instruction.getRS();
-	uint32_t rd_idx = m_instruction.getRD();
+	uint32_t rtIdx = m_instruction.getRT();
+	uint32_t rsIdx = m_instruction.getRS();
+	uint32_t rdIdx = m_instruction.getRD();
 
-	Register<Type> rt = Register<Type>(rt_idx, m_registerFile[rt_idx]);
-	Register<Type> rs = Register<Type>(rs_idx, m_registerFile[rs_idx]);
-	Register<Type> rd = Register<Type>(rd_idx, m_registerFile[rd_idx]);
+	Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
+	Register<Type> rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
+	Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
 
-	m_registerFile[rd_idx] = setOp(rt.value, rs.value);
+	m_registerFile[rdIdx] = setOp(rt.value, rs.value);
 
 	if (m_context->isDebug())
 	{
-		rd.set_value(m_registerFile[rd_idx]);
+		rd.set_value(m_registerFile[rdIdx]);
 		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
 	}
 }
@@ -333,19 +333,19 @@ void mips::CPU::executeRegisterSetOnOp(const std::string& mnemonic, const SetOp&
 template <typename Type, typename SetOp>
 void mips::CPU::executeImmediateSetOnOp(const std::string& mnemonic, const SetOp& setOp)
 {
-	uint32_t rt_idx = m_instruction.getRT();
-	uint32_t rs_idx = m_instruction.getRS();
-	uint32_t rd_idx = m_instruction.getRD();
+	uint32_t rtIdx = m_instruction.getRT();
+	uint32_t rsIdx = m_instruction.getRS();
+	uint32_t rdIdx = m_instruction.getRD();
 
-	Register<Type> rt = Register<Type>(rt_idx, m_registerFile[rt_idx]);
-	Register<Type> rs = Register<Type>(rs_idx, m_registerFile[rs_idx]);
-	Register<Type> rd = Register<Type>(rd_idx, m_registerFile[rd_idx]);
+	Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
+	Register<Type> rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
+	Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
 
-	m_registerFile[rd_idx] = setOp(rt.value, rs.value);
+	m_registerFile[rdIdx] = setOp(rt.value, rs.value);
 
 	if (m_context->isDebug())
 	{
-		rd.set_value(m_registerFile[rd_idx]);
+		rd.set_value(m_registerFile[rdIdx]);
 		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
 	}
 }
@@ -446,17 +446,17 @@ void mips::CPU::break_()
 
 void mips::CPU::cfc2()
 {
-	uint32_t rd_idx = m_instruction.getRD();
-	uint32_t rt_idx = m_instruction.getRT();
-	m_registerFile[rt_idx] = m_gte.readControlRegister(rd_idx);
+	uint32_t rdIdx = m_instruction.getRD();
+	uint32_t rtIdx = m_instruction.getRT();
+	m_registerFile[rtIdx] = m_gte.readControlRegister(rdIdx);
 
 	if (m_context->isDebug())
 	{
-		Register<uint32_t> rt = Register<uint32_t>(rt_idx, m_registerFile[rt_idx]);
-		Register<uint32_t> rd = Register<uint32_t>(rd_idx, m_registerFile[rt_idx]); 
+		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+		Register<uint32_t> rd = Register<uint32_t>(rdIdx, m_registerFile[rtIdx]); 
 
 		//m_context->getDebugger()->logGenericRegOp("cfc2", rt, rd);
-		m_context->getDebugger()->logMove("cfc2", rt_idx, rd_idx, m_registerFile[rt_idx]);
+		m_context->getDebugger()->logMove("cfc2", rtIdx, rdIdx, m_registerFile[rtIdx]);
 	}
 	raiseException("Coprocessor unusable");
 }
@@ -637,15 +637,15 @@ void mips::CPU::lwr()
  
 void mips::CPU::mfc()
 {
-	uint32_t rd_idx = m_instruction.getRD();
-	uint32_t rt_idx = m_instruction.getRT();
-	m_registerFile[rt_idx] = (m_instruction.getCOPIdx() == 0) ? m_cop0.readDataRegister(rd_idx) : m_gte.readDataRegister(rd_idx);
+	uint32_t rdIdx = m_instruction.getRD();
+	uint32_t rtIdx = m_instruction.getRT();
+	m_registerFile[rtIdx] = (m_instruction.getCOPIdx() == 0) ? m_cop0.readDataRegister(rdIdx) : m_gte.readDataRegister(rdIdx);
 
 	if (m_context->isDebug())
 	{
 		std::string mnemonic = (m_instruction.getCOPIdx() == 0)? "mfc0" : "mfc2";
-		Register<uint32_t> rd = Register<uint32_t>(rd_idx, m_registerFile[rt_idx]); // to keep logs simpler read from rt intentionally
-		Register<uint32_t> rt = Register<uint32_t>(rt_idx, m_registerFile[rt_idx]);
+		Register<uint32_t> rd = Register<uint32_t>(rdIdx, m_registerFile[rtIdx]); // to keep logs simpler read from rt intentionally
+		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
 		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rd);
 	}
 	raiseException("Coprocessor unusable");
@@ -653,49 +653,51 @@ void mips::CPU::mfc()
 
 void mips::CPU::mfhi()
 {
-	auto movFromHiOp = [this]()->uint32_t {	uint32_t rd_idx = m_instruction.getRD(); m_registerFile[rd_idx] = m_hi; return rd_idx; };
+	auto movFromHiOp = [this]()->uint32_t {	uint32_t rdIdx = m_instruction.getRD(); m_registerFile[rdIdx] = m_hi; return rdIdx; };
 	executeMovHiLo("mfhi", movFromHiOp);
 }
 
 void mips::CPU::mflo()
 {
-	auto movFromLoOp = [this]()->uint32_t {	uint32_t rd_idx = m_instruction.getRD(); m_registerFile[rd_idx] = m_lo; return rd_idx; };
+	auto movFromLoOp = [this]()->uint32_t {	uint32_t rdIdx = m_instruction.getRD(); m_registerFile[rdIdx] = m_lo; return rdIdx; };
 	executeMovHiLo("mflo", movFromLoOp);
 }
 
 void mips::CPU::mtc()
 {
-	uint32_t rd_idx = m_instruction.getRD();
-	uint32_t rt_idx = m_instruction.getRT();
+	uint32_t rdIdx = m_instruction.getRD();
+	uint32_t rtIdx = m_instruction.getRT();
+	uint32_t copIdx = m_instruction.getCOPIdx();
 
-	if (m_instruction.getCOPIdx() == 0)
+	if (copIdx)
 	{
-		m_cop0.writeDataRegister(rd_idx, m_registerFile[rt_idx]);
+		m_cop0.writeDataRegister(rdIdx, m_registerFile[rtIdx]);
 	}
 	else
 	{
-		m_gte.writeDataRegister(rd_idx, m_registerFile[rt_idx]);
+		m_gte.writeDataRegister(rdIdx, m_registerFile[rtIdx]);
 	}
 	
 	if (m_context->isDebug())
 	{
 		std::string mnemonic = (m_instruction.getCOPIdx() == 0) ? "mtc0" : "mtc2";
-		Register<uint32_t> rd = Register<uint32_t>(rd_idx, m_registerFile[rt_idx]); // to keep logs simpler read from rd intentionally
-		Register<uint32_t> rt = Register<uint32_t>(rt_idx, m_registerFile[rt_idx]); 
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rt);
+		uint32_t    copRegValue = copIdx ? m_cop0.readDataRegister(rdIdx) : m_gte.readDataRegister(rdIdx);
+		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]); 
+		COPRegister		   rd = COPRegister(copIdx, rdIdx, copRegValue);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rd);
 	}
 	raiseException("Coprocessor unusable");
 }
 
 void mips::CPU::mthi()
 {
-	auto movToHiOp = [this]()->uint32_t { uint32_t rs_idx = m_instruction.getRS(); m_hi = m_registerFile[rs_idx]; return rs_idx; };
+	auto movToHiOp = [this]()->uint32_t { uint32_t rsIdx = m_instruction.getRS(); m_hi = m_registerFile[rsIdx]; return rsIdx; };
 	executeMovHiLo("mthi", movToHiOp);
 }
 
 void mips::CPU::mtlo()
 {
-	auto movToLoOp = [this]()->uint32_t { uint32_t rs_idx = m_instruction.getRS(); m_lo = m_registerFile[rs_idx]; return rs_idx; };
+	auto movToLoOp = [this]()->uint32_t { uint32_t rsIdx = m_instruction.getRS(); m_lo = m_registerFile[rsIdx]; return rsIdx; };
 	executeMovHiLo("mtlo", movToLoOp);
 }
 

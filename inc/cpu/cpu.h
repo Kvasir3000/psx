@@ -56,6 +56,18 @@ namespace mips
 			std::string name;
 		};
 
+		struct COPRegister
+		{
+			COPRegister(uint32_t cop_idx, uint32_t reg_idx, uint32_t v)
+			{
+				std::string cop_name = (cop_idx == 0) ? "COP0" : "GTE";
+				name = cop_name + "_r" + std::to_string(reg_idx);
+				value = v;
+			};
+			uint32_t value;
+			std::string name;
+		};
+
 		std::shared_ptr<psx::Context>                                  m_context;
 		std::array<uint32_t, cpu_constants::NUMBER_OF_REGISTERS>       m_registerFile; 
 		uint32_t                                                       m_hi; 
