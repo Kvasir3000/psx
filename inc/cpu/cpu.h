@@ -35,7 +35,7 @@ namespace mips
 		{
 			Register(uint32_t idx, Type v)
 			{ 
-				name = "r" + std::to_string(idx);
+				name = cpu_constants::REGISTER_NAMING_MAP[idx];
 				value = v; 
 			};
 			Type value;
