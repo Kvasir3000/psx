@@ -4,6 +4,7 @@
 #include "../inc/cpu/cpu.h"
 #include "../inc/bus.h"
 #include "../inc/context.h"
+#include "../tests/testbuilder.h"
 
 namespace psx
 {
@@ -21,5 +22,7 @@ namespace psx
 		std::shared_ptr<Context>      m_context;
 		mips::CPU                     m_cpu;
 		bool                          m_isRunning = false; 
+		std::vector<testing::Test>   m_cpu_tests;
+
 	};
 }

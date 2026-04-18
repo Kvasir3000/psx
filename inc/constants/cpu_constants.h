@@ -63,4 +63,7 @@ namespace cpu_constants
 		Halfword, 
 		Word
 	}; 
+
+	static constexpr uint16_t  END   =  0xDEAD; // 0xDEAD is used to indicate the end of a program cpu during testing
+
 }
