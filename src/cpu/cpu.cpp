@@ -160,3 +160,11 @@ bool mips::CPU::checkOverflow(int32_t num1, int32_t num2, int32_t result)
 	}
 	return false;
 }
+
+void mips::CPU::reset()
+{
+	m_registerFile.fill(0);
+	m_hi = 0;
+	m_lo = 0;
+	m_pc = 0;
+}

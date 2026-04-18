@@ -26,6 +26,7 @@ namespace mips
 		~CPU();
 
 		bool emuCycle();
+		void reset();
 
 	private:
 	
