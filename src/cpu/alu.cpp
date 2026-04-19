@@ -256,6 +256,24 @@ void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const std::func
 	m_registerFile[rt] = result;
 }
 
+template<typename CopOp>
+void mips::CPU:: executeCopOp(const std::string& mnemonic, const CopOp& copOp)
+{
+	uint32_t rdIdx = m_instruction.getRD();
+	uint32_t rtIdx = m_instruction.getRT();
+
+	copOp(rtIdx, rdIdx);
+
+	if (m_context->isDebug())
+	{
+		uint32_t		   copIdx = m_instruction.getCOPIdx();
+		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+		COPRegister        rd = COPRegister(copIdx, rdIdx, m_copMap[copIdx]->readDataRegister(rdIdx));
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rd);
+	}
+	raiseException("Coprocessor unusable");
+}
+
 template<typename MovOp>
 void mips::CPU::executeMovHiLo(const std::string& mnemonic, const MovOp& movOp)
 {
@@ -446,19 +464,8 @@ void mips::CPU::break_()
 
 void mips::CPU::cfc2()
 {
-	uint32_t rdIdx = m_instruction.getRD();
-	uint32_t rtIdx = m_instruction.getRT();
-	m_registerFile[rtIdx] = m_gte.readControlRegister(rdIdx);
-
-	if (m_context->isDebug())
-	{
-		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
-		Register<uint32_t> rd = Register<uint32_t>(rdIdx, m_registerFile[rtIdx]); 
-
-		//m_context->getDebugger()->logGenericRegOp("cfc2", rt, rd);
-		m_context->getDebugger()->logMove("cfc2", rtIdx, rdIdx, m_registerFile[rtIdx]);
-	}
-	raiseException("Coprocessor unusable");
+	auto cpFromControl = [this](uint32_t rt, uint32_t rd)->void { m_registerFile[rt] = m_gte.readControlRegister(rd); };
+	executeCopOp("cfc2", cpFromControl);
 }
 
 void mips::CPU::cop()
@@ -470,16 +477,8 @@ void mips::CPU::cop()
 
 void mips::CPU::ctc2()
 {
-	uint32_t rd = m_instruction.getRD();
-	uint32_t rt = m_instruction.getRT();
-	m_gte.writeContolRegister(rd, m_registerFile[rt]);
-	
-	if (m_context->isDebug())
-	{
-		m_context->getDebugger()->logMove("ctc2", rd, rt, m_registerFile[rt]);
-	}
-
-	raiseException("Coprocessor unusable");
+	auto cpToControl = [this](uint32_t rt, uint32_t rd)->void { m_gte.writeContolRegister(rd, m_registerFile[rt]); };
+	executeCopOp("ctc2", cpToControl);
 }
 
 // Modulo looks might be working wrong, need to check
@@ -636,19 +635,9 @@ void mips::CPU::lwr()
 }
  
 void mips::CPU::mfc()
-{
-	uint32_t rdIdx = m_instruction.getRD();
-	uint32_t rtIdx = m_instruction.getRT();
-	m_registerFile[rtIdx] = (m_instruction.getCOPIdx() == 0) ? m_cop0.readDataRegister(rdIdx) : m_gte.readDataRegister(rdIdx);
-
-	if (m_context->isDebug())
-	{
-		std::string mnemonic = (m_instruction.getCOPIdx() == 0)? "mfc0" : "mfc2";
-		Register<uint32_t> rd = Register<uint32_t>(rdIdx, m_registerFile[rtIdx]); // to keep logs simpler read from rt intentionally
-		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rd);
-	}
-	raiseException("Coprocessor unusable");
+{	
+	auto mfcOp = [this](uint32_t rt, uint32_t rd)->void { m_registerFile[rt] = m_copMap[m_instruction.getCOPIdx()]->readDataRegister(rd); };
+	executeCopOp(m_instruction.getCOPIdx() ? "mfc2" : "mfc0", mfcOp);
 }
 
 void mips::CPU::mfhi()
@@ -665,28 +654,8 @@ void mips::CPU::mflo()
 
 void mips::CPU::mtc()
 {
-	uint32_t rdIdx = m_instruction.getRD();
-	uint32_t rtIdx = m_instruction.getRT();
-	uint32_t copIdx = m_instruction.getCOPIdx();
-
-	if (copIdx)
-	{
-		m_cop0.writeDataRegister(rdIdx, m_registerFile[rtIdx]);
-	}
-	else
-	{
-		m_gte.writeDataRegister(rdIdx, m_registerFile[rtIdx]);
-	}
-	
-	if (m_context->isDebug())
-	{
-		std::string mnemonic = (m_instruction.getCOPIdx() == 0) ? "mtc0" : "mtc2";
-		uint32_t    copRegValue = copIdx ? m_cop0.readDataRegister(rdIdx) : m_gte.readDataRegister(rdIdx);
-		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]); 
-		COPRegister		   rd = COPRegister(copIdx, rdIdx, copRegValue);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rd);
-	}
-	raiseException("Coprocessor unusable");
+	auto mtcOp = [this](uint32_t rt, uint32_t rd)-> void {m_copMap[m_instruction.getCOPIdx()]->writeDataRegister(rd, m_registerFile[rt]); };
+	executeCopOp(m_instruction.getCOPIdx() ? "mt2" : "mtc0", mtcOp);
 }
 
 void mips::CPU::mthi()
@@ -784,4 +753,3 @@ void mips::CPU::slti()
 	auto setOnLessThanImmOp = [](int32_t rs, int32_t immediate)->bool { return rs < immediate; };
 	executeRegisterSetOnOp<int32_t>("slti", setOnLessThanImmOp);
 }
-
