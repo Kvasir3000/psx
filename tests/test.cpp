@@ -256,6 +256,16 @@ namespace testing
 		addInstruction(instruction);
 	}
 
+	void Test::mfc0(uint32_t rt, uint32_t rd)
+	{
+		mfc(rt, rd, 0);
+	}
+
+	void Test::mfc2(uint32_t rt, uint32_t rd)
+	{
+		mfc(rt, rd, 1);
+	}
+
 	void Test::mtc(uint32_t rt, uint32_t rd, uint32_t copIdx)
 	{
 		InstructionDescriptor instruction = { 0 };
@@ -265,6 +275,16 @@ namespace testing
 		instruction.rt = rt;
 		instruction.rd = rd;
 		addInstruction(instruction);
+	}
+
+	void Test::mtc0(uint32_t rt, uint32_t rd)
+	{
+		mtc(rt, rd, 0);
+	}
+
+	void Test::mtc2(uint32_t rt, uint32_t rd)
+	{
+		mtc(rt, rd, 1);
 	}
 
 	void Test::mthi(uint32_t rs)

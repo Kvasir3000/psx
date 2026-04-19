@@ -18,6 +18,7 @@ namespace testing
 		TestBuilder addTestArithmeticOps();
 		TestBuilder addTestLoadWLR();
 		TestBuilder addTestLoadOperations();
+		TestBuilder addTestLoadCOP2();
 		const std::vector<Test>& build();
 	};
 }

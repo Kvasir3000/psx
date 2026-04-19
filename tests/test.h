@@ -72,7 +72,11 @@ public:
 	void sllv(uint32_t rd, uint32_t rt, uint32_t rs);
 	void slt(uint32_t rd, uint32_t rs, uint32_t rt);
 	void mfc(uint32_t rt, uint32_t rd, uint32_t copIdx);
+	void mfc0(uint32_t rt, uint32_t rd);
+	void mfc2(uint32_t rt, uint32_t rd);
 	void mtc(uint32_t rt, uint32_t rd, uint32_t copIdx);
+	void mtc0(uint32_t rt, uint32_t rd);
+	void mtc2(uint32_t rt, uint32_t rd);
 	void mthi(uint32_t rs);
 	void mtlo(uint32_t rs);
 	void mfhi(uint32_t rd);
