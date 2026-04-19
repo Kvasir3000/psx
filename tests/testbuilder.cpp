@@ -50,6 +50,13 @@ namespace testing
 		return *this;
 	}
 
+	TestBuilder TestBuilder::addTestLoadCOP2()
+	{
+		TestLoadCOP2 test;
+		m_tests.emplace_back((Test)test);
+		return *this;
+	}
+
 	const std::vector<Test>& TestBuilder::build()
 	{
 		return m_tests;

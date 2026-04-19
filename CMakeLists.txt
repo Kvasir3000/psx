@@ -21,6 +21,7 @@ set(SOURCES
    tests/test.h
    tests/testsuits.h
    tests/testbuilder.h
+   tests/registermap.h
    inc/bus.h
    inc/context.h
    inc/cpu/cpu.h

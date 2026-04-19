@@ -15,6 +15,7 @@ psx::PlayStation::PlayStation() :
 							  addTestArithmeticOps().
 		                      addTestStore().
 							  addTestLoadWLR().
+						      addTestLoadCOP2(). 
 		                      build();
 
 	readProgramFile();
