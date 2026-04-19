@@ -12,6 +12,7 @@
 #include "../inc/bus.h"
 #include "../inc/cpu/opcodes.h"
 #include "../inc/constants/cpu_constants.h"
+#include "../inc/cpu/operands.h"
 #include "../inc/cpu/instruction.h"
 #include "../inc/cpu/gte.h"
 #include "../inc/cpu/cop0.h"
@@ -29,39 +30,13 @@ namespace mips
 		void reset();
 
 	private:
-	
-		template<typename Type>
-		struct Register
-		{
-			Register(uint32_t idx, Type v)
-			{ 
-				name = cpu_constants::REGISTER_NAMING_MAP[idx];
-				value = v; 
-			};
-			Type value;
-			std::string name;
-
-			void set_value(Type v) { value = v; }
-		}; 
-
-		template<typename Type>
-		struct Immediate
-		{
-			Immediate(Type v)
-			{
-				name = std::to_string(v); 
-				value = v;
-			};
-			Type value;
-			std::string name;
-		};
 
 		std::shared_ptr<psx::Context>                                  m_context;
-		std::array<uint32_t, cpu_constants::NUMBER_OF_REGISTERS>       m_registerFile; 
-		uint32_t                                                       m_hi; 
+		std::array<uint32_t, cpu_constants::NUMBER_OF_REGISTERS>       m_registerFile;
+		uint32_t                                                       m_hi;
 		uint32_t                                                       m_lo;
 		uint32_t                                                       m_pc;
-		
+
 		struct DelaySlot
 		{
 			cpu_constants::DelaySlotState                              status;
@@ -74,7 +49,7 @@ namespace mips
 			cpu_constants::LoadSize                                    loadSize;
 			uint32_t                                                   registerIdx;
 			uint32_t                                                   data;
-			bool                                                       sign; 
+			bool                                                       sign;
 		};
 		std::queue<DelayLoad>                                          m_delayLoads;
 
@@ -85,9 +60,9 @@ namespace mips
 		std::array<std::function<void()>, NUMBER_OF_REGIMM_OPCODES>    m_regimmOpcodeTable;
 		std::array<std::function<void()>, NUMBER_OF_COP_OPCODES>       m_copOpcodeTable;
 
-		
 
-		
+
+
 		void fillPrimaryOpcodeTable();
 		void fillSecondaryOpcodeTable();
 		void fillREGIMMOpcodeTable();
@@ -97,7 +72,7 @@ namespace mips
 
 		void fetchInstruction();
 		void decodeInstruction();
-		void executeInstruction(); 
+		void executeInstruction();
 		void executeDelayedBranch();
 		void executeDelayedLoad();
 
@@ -108,6 +83,7 @@ namespace mips
 
 		GTE  m_gte;
 		COP0 m_cop0;
+		std::array<COP*, 2> m_copMap = { (COP*)& m_gte,  (COP*) & m_cop0 };
 
 
 		struct ArithmeticOpFlags
@@ -132,6 +108,8 @@ namespace mips
 		void excecuteJumpRegisterOp(const std::string& mnemonic);
 		void executeLoadOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t)>& readOp, const LoadOpFlags& opFlags);
 		void executeLoadWordLROp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t, uint32_t)>& adjustWord);
+		template<typename CopOp>
+		void executeCopOp(const std::string& mnemonic, const CopOp& copOp);
 		template<typename MovOp>
 		void executeMovHiLo(const std::string& mnemonic, const MovOp& movOp);
 		void executeStoreOp(const std::string& mnemonic, const std::function<void(uint32_t, uint32_t)>& storeOp);
@@ -140,9 +118,6 @@ namespace mips
 		void executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp);
 		template<typename Type, typename SetOp>
 		void executeImmediateSetOnOp(const std::string& mnemonic, const SetOp& setOp);
-		/*void executeRegisterSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation);
-		void executeImmediateSetOnOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& setOperation);*/
-
 
 		void add();
 		void addi();

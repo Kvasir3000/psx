@@ -24,10 +24,12 @@ set(SOURCES
    inc/bus.h
    inc/context.h
    inc/cpu/cpu.h
+   inc/cpu/operands.h
    inc/debugger.h
    inc/cpu/instruction.h
    inc/cpu/opcodes.h
    inc/cpu/gte.h
+   inc/cpu/cop.h
    inc/constants/debugger_constants.h
    inc/constants/cpu_constants.h
    inc/constants/gte_constants.h

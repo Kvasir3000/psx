@@ -39,7 +39,6 @@ namespace psx
 		void logLoadUpperImmediate(uint32_t rt, uint32_t immediate, uint32_t result);
 		void logDelayedBranch();
 		void logDelayedLoad(uint32_t rt, uint32_t rtSrc, bool sign, bool byte, bool halfword);
-		void logMove(const std::string& mnemonic, uint32_t rt, uint32_t rd, int32_t rdSrc);
 		void logShiftLogical(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t shift, uint32_t rdSrc, uint32_t rtSrc);
 		void logShiftVariable(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t rs, uint32_t rdSrc, uint32_t rtSrc, uint32_t rsSrc);
 		
