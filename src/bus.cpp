@@ -49,11 +49,6 @@ void psx::BUS::storeHalfword(uint32_t memoryAddress, uint16_t data)
 	m_memory[memoryAddress + 1] = data & cpu_constants::BYTE_MASK;
 }
 
-int32_t psx::BUS::getInstructionCounter()
-{
-	return --instructionCounter;
-}
-
 bool psx::BUS::isProgramEnd(uint32_t pc)
 {
 	return readWord(pc) == cpu_constants::END;

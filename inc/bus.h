@@ -19,7 +19,6 @@ namespace psx
 		void storeHalfword(uint32_t memoryAddress, uint16_t data);
 		void storeWord(uint32_t memoryAddress, uint16_t data);
 
-		int32_t  getInstructionCounter();
 		bool     isProgramEnd(uint32_t pc);
 
 		void     reset();
@@ -29,15 +28,5 @@ namespace psx
 		static constexpr uint32_t MEMORY_SIZE = 300;
 		uint8_t m_memory[MEMORY_SIZE] = { 0 };
 	
-
-		// Testing programs
-		void testLoadOperations();
-		void testLoadCOP2();
-		void testLoadWLR();
-		void testMove();
-		void testArithmeticOperations();
-		void testStore();
-		void testSetOn();
-		int32_t instructionCounter = 0;
 	};
 }
