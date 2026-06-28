@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <stdint.h>
+#include <memory>
 #include "../tests/testbuilder.h"
 
 namespace psx 
@@ -10,7 +11,7 @@ namespace psx
 	public:
 		BUS();
 		~BUS() {};
-		void     loadTest(testing::Test& test);
+		void     loadTest(std::shared_ptr<testing::Test>& test);
 		uint8_t  readByte(uint32_t memoryAddress);
 		uint16_t readHalfword(uint32_t memoryAddress);
 		uint32_t readWord(uint32_t memoryAddress);
@@ -25,7 +26,7 @@ namespace psx
 
 	private:
 
-		static constexpr uint32_t MEMORY_SIZE = 300;
+		static constexpr uint32_t MEMORY_SIZE = 500;
 		uint8_t m_memory[MEMORY_SIZE] = { 0 };
 	
 	};

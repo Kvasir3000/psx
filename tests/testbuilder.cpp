@@ -8,57 +8,57 @@ namespace testing
 
 	};
 
-	TestBuilder TestBuilder::addTestStore()
+	TestBuilder& TestBuilder::addTestStore()
 	{
-		TestStore test;
-		m_tests.emplace_back((Test)test);
-		return *this;
+		return addTest<TestStore>();
 	}
 
-	TestBuilder TestBuilder::addTestMove()
+	TestBuilder& TestBuilder::addTestMove()
 	{
-		TestMove test;
-		m_tests.emplace_back((Test)test);
-		return *this;
+		return addTest<TestMove>();
 	}
 
-	TestBuilder TestBuilder::addTestSetOn()
+	TestBuilder& TestBuilder::addTestSetOn()
 	{
-		TestSetOn test;
-		m_tests.emplace_back((Test)test);
-		return *this;
+		return addTest<TestSetOn>();
 	}
 
-	TestBuilder TestBuilder::addTestArithmeticOps()
+	TestBuilder& TestBuilder::addTestArithmeticOps()
 	{
-		TestArithmeticOps test;
-		m_tests.emplace_back((Test)test);
-		return *this;
+		return addTest<TestArithmeticOps>();
 	}
 
-	TestBuilder  TestBuilder::addTestLoadWLR()
+	TestBuilder& TestBuilder::addTestLoadWLR()
 	{
-		TestLoadWLR test;
-		m_tests.emplace_back((Test)test);
-		return *this;
+		return addTest<TestLoadWLR>();
 	}
 
-	TestBuilder TestBuilder::addTestLoadOperations()
+	TestBuilder& TestBuilder::addTestLoadOperations()
 	{
-		TestLoadOperations test;
-		m_tests.emplace_back((Test)test);
-		return *this;
+		return addTest<TestLoadOperations>();
 	}
 
-	TestBuilder TestBuilder::addTestLoadCOP2()
+	TestBuilder& TestBuilder::addTestLoadCOP2()
 	{
-		TestLoadCOP2 test;
-		m_tests.emplace_back((Test)test);
-		return *this;
+		return addTest<TestLoadCOP2>();
 	}
 
-	const std::vector<Test>& TestBuilder::build()
+	TestBuilder& TestBuilder::addTestBranch()
 	{
+		return addTest<TestBranch>();
+	}	
+	
+	TestBuilder& TestBuilder::addTestJump()
+	{
+		return addTest<TestJump>();
+	}
+
+	const std::vector<std::shared_ptr<Test>>& TestBuilder::build() const
+	{
+		for (auto test : m_tests)
+		{
+			test.get()->link();
+		}
 		return m_tests;
 	}
 }

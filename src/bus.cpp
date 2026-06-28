@@ -12,10 +12,10 @@ psx::BUS::BUS()
 
 }
 
-void psx::BUS::loadTest(testing::Test& test)
+void psx::BUS::loadTest(std::shared_ptr<testing::Test>& test)
 {
-	const uint8_t* testBin = test.getTestBin();
-	memcpy(m_memory, testBin, test.getInstructionCount() * cpu_constants::WORD_SIZE_BYTES);
+	const uint8_t* testBin = test->getTestBin();
+	memcpy(m_memory, testBin, test->getInstructionCount() * cpu_constants::WORD_SIZE_BYTES);
 }
 
 uint8_t psx::BUS::readByte(uint32_t memoryAddress) 
