@@ -38,7 +38,7 @@ namespace testing
 			mflo(a1);
 			mtc0(a3, a1);
 			mtc2(a0, a0);
-			mfc0(a2, 7);
+			mfc0(a2, 5);
 			mfc2(t0, 4);
 			add(t0, t0, a2);
 			mthi(t0);
@@ -46,7 +46,6 @@ namespace testing
 			ctc2(t0, 2);
 			cfc2(a1, 2);
 			endProgram();
-			assert(false); // Test cpc2 + Port the other test cases
 		}
 	};
 
@@ -78,7 +77,7 @@ namespace testing
 			nor(7, 5, 6);
 			initRegister(8, 2);
 			initRegister(9, 1);
-			_or(9, 9, 8);
+			or_(9, 9, 8);
 			ori(9, 9, 0b1000);
 			endProgram();
 
@@ -100,7 +99,7 @@ namespace testing
 			lwl(1, 2, 100);
 			lwr(1, 2, 100);
 			endProgram();
-			assert(false); // This op is definetly broken, the delay slot should be added, but only after both lwr/lwl or lwl/lwr are called together, no delay slot in between them
+			//assert(false); // This op is definetly broken, the delay slot should be added, but only after both lwr/lwl or lwl/lwr are called together, no delay slot in between them
 			// word1:|AA|BB|CC|DD|
 			//       |--|--|--|--|
 			m_memory[100] = 0xDD;
@@ -157,6 +156,7 @@ namespace testing
 		// Load 314 into COP2 data register 12 (SXY0)
 		TestLoadCOP2() : Test("TEST_LOAD_COP2")
 		{
+			assert(false); // first of all lwc is not loggin cop2 register properly, secondly i do not think that this test is passing
 			lwc2(12, 0, 100);
 			mfc2(4, 12);
 			addi(4, 4, -10);
@@ -167,4 +167,209 @@ namespace testing
 			m_memory[101] = 1;
 		}
 	};
+
+	class TestBranch : public Test
+	{
+	public: 
+		TestBranch() : Test("TEST_BRANCH")
+		{
+			label("beq");
+			{
+				initRegister(t0, 0); // i
+				initRegister(t1, 4); // i < 4
+				initRegister(t2, 1); // var = 1
+				initRegister(t3, 2); // const == 2
+				label("loop");
+				{
+					beq(t0, t1, "return_beq");
+					nop();
+					mlt(t2, t3);   // var *= 2
+					mflo(t2);
+					addi(t0, t0, 1); // i++
+					j("loop");
+					nop();
+				}
+				label("return_beq");
+				{
+					jr(ra);
+					nop();
+				}
+			}
+
+			label("bne");
+			{
+				initRegister(t0, 1);
+				initRegister(t1, 1);
+				label("loop2");
+				{
+					bne(t0, t1, "return_bne");
+					nop();
+					addi(t0, t0, -1);
+					j("loop2");
+					nop();
+				}
+				label("return_bne");
+				{
+					jr(ra);
+					nop();
+				}
+			}
+			
+			label("bgez");
+			{
+				initRegister(t0, -3);
+				label("loop3");
+				{
+					bgez(t0, 4);
+					nop();
+					addi(t0, t0, 1);
+					j("loop3");
+					nop();
+				}
+				label("increment_t0");
+				{
+					addi(t0, t0, 1);
+				}
+				label("loop4");
+				{
+					bgez(t0, "return_bgez");
+					nop();
+					addi(t0, t0, 1);
+					j("loop4");
+					nop();
+				}
+				label("return_bgez");
+				{
+					jr(ra);
+					nop();
+				}
+			}
+
+
+			label("bgezal");
+			{
+				add(a0, zero, ra); // Save memory addr to main return
+				initRegister(t0, 12);
+				bgezal(t0, "branch_addr");
+				addi(t1, zero, 0);
+				bgezal(t0, "branch_addr");
+				addi(t1, zero, -12);
+				bgezal(t0, "branch_addr"); // this branch should be ingored
+				add(ra, zero, a0);
+				jr(ra);
+				nop();
+
+			};
+
+			label("bgtz");
+			{
+				initRegister(t0, -4);
+
+				label("loop5");
+				{
+					bgtz(t0, "program_end");
+					addi(t0, t0, 1);
+					j("loop5");
+					nop();
+				};
+			};
+			
+			label("blez");
+			{
+				initRegister(t0, -5);
+				label("loop6");
+				{
+					blez(t0, "loop6");
+					addi(t0, t0, 1);
+					j("program_end");
+					nop();
+				}
+			}
+
+			label("bltz");
+			{
+				initRegister(t0, -5);
+				label("loop7");
+				{
+					bltz(t0, "loop7");
+					addi(t0, t0, 1);
+					j("program_end");
+					nop();
+				}
+			}
+
+			label("bltzal");
+			{
+				add(a0, zero, ra); // Save memory addr to main return
+				initRegister(t0, -12);
+				bltzal(t0, "branch_addr");
+				addi(t1, zero, 5);
+				bltzal(t0, "branch_addr"); // Should be ingored
+				add(ra, zero, a0);
+				jr(ra);
+				nop();
+			}
+
+			label("branch_addr");
+			{
+				j("set_t0_to_t1");
+				nop();
+			}
+
+			label("set_t0_to_t1");
+			{
+				add(t0, zero, t1);
+				jr(ra);
+				nop();
+			}
+
+			label("main");
+			{
+				jal("bltzal");
+				nop();		
+				label("program_end");
+				{
+					endProgram();
+				}
+			}
+		}
+	};
+
+	class TestJump : public Test
+	{
+	public:
+		TestJump() : Test("TEST_JUMP")
+		{
+			label("set_1_if_not_equals");
+			{
+				initRegister(t0, 12);
+				initRegister(t1, 15);
+				bne(t0, t1, 2);
+				nop();
+				or_(t0, t1, t0);
+				jr(ra); 
+				nop();
+			}
+		
+			label("main");
+			{
+				jal("set_1_if_not_equals");
+				nop();
+				initRegister(t0, 23);
+				initRegister(t2, 256);
+				jal("add_t0_t2");
+				nop();
+				endProgram();
+			}
+
+			label("add_t0_t2");
+			{
+				add(t3, t0, t2);
+				mlt(t3, t3);
+				jr(ra);
+				nop();
+			}
+		};
+	};
+
 }

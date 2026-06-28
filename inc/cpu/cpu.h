@@ -28,6 +28,7 @@ namespace mips
 
 		bool emuCycle();
 		void reset();
+		void setPC(uint32_t);
 
 	private:
 
@@ -83,7 +84,7 @@ namespace mips
 
 		GTE  m_gte;
 		COP0 m_cop0;
-		std::array<COP*, 2> m_copMap = { (COP*)& m_gte,  (COP*) & m_cop0 };
+		std::array<COP*, 2> m_copMap = { (COP*)&m_cop0, (COP*)& m_gte };
 
 
 		struct ArithmeticOpFlags
@@ -97,22 +98,26 @@ namespace mips
 			cpu_constants::LoadSize size;
 			bool isSigned;
 			uint32_t alignMask = 0;
-			bool isCop2 = false;
 		};
 		template<typename Type, typename ArithmeticOp>
 		void executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, const ArithmeticOpFlags& opFlags);
 		template<typename Type, typename ArithmeticOp>
 		void executeImmediateArithmeticOp(const std::string&  mnemonic, const ArithmeticOp& arithmeticOp, bool catchException);
-		void executeBranchOp(const std::string& mnemonic, const std::function<bool(uint32_t, uint32_t)>& branchCondition, bool compareToZero);
+		template<typename BranchZeroOp>
+		void executeBranchZeroOp(const std::string& mnemonic, const BranchZeroOp& branchCondition);
+		template<typename BranchOp>
+		void executeBranchOp(const std::string& mnemonic, const BranchOp& branchCondition, bool compareToZero);
 		void executeJumpOp(const std::string& mnemonic);
 		void excecuteJumpRegisterOp(const std::string& mnemonic);
-		void executeLoadOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t)>& readOp, const LoadOpFlags& opFlags);
+		template <typename LoadOp>
+		void executeLoadOp(const std::string& mnemonic, const LoadOp& readOp, const LoadOpFlags& opFlags);
 		void executeLoadWordLROp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t, uint32_t)>& adjustWord);
 		template<typename CopOp>
 		void executeCopOp(const std::string& mnemonic, const CopOp& copOp);
 		template<typename MovOp>
 		void executeMovHiLo(const std::string& mnemonic, const MovOp& movOp);
-		void executeStoreOp(const std::string& mnemonic, const std::function<void(uint32_t, uint32_t)>& storeOp);
+		template<typename StoreOp>
+		void executeStoreOp(const std::string& mnemonic, const StoreOp& storeOp);
 		void executeShiftOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t&)>& shiftOp, bool isLogical);
 		template<typename Type, typename SetOp>
 		void executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp);
@@ -139,7 +144,7 @@ namespace mips
 		void ctc2();
 		void div();
 		void divu();
-		void jump();
+		void j();
 		void jal();
 		void jalr();
 		void jr();

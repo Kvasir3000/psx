@@ -18,11 +18,11 @@ namespace psx
 
 		void run();
 	private: 
-		std::shared_ptr<psx::BUS>     m_bus;
-		std::shared_ptr<Context>      m_context;
-		mips::CPU                     m_cpu;
-		bool                          m_isRunning = false; 
-		std::vector<testing::Test>   m_cpu_tests;
+		std::shared_ptr<psx::BUS>                     m_bus;
+		std::shared_ptr<Context>                      m_context;
+		mips::CPU								      m_cpu;
+		bool										  m_isRunning = false; 
+		std::vector<std::shared_ptr<testing::Test>>   m_cpu_tests;
 
 	};
 }

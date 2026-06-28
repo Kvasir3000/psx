@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <optional>
+#include <iomanip>
 
 #include "../inc/constants/debugger_constants.h"
 
@@ -18,14 +19,15 @@ namespace psx
 #if defined CONSOLE_OUTPUT
 #define OUTPUT_STREAM std::cout 
 #else 
-		std::ofstream m_traceFile;
+		mutable std::ofstream m_traceFile;
 #define OUTPUT_STREAM m_traceFile
 #endif
 		uint32_t      m_pc;
 	public:
 		Debugger();
 		~Debugger();
-
+		
+		void log(std::string message);
 		void logWarning(std::string message);
 
 
@@ -34,7 +36,7 @@ namespace psx
 		void logBranch(const std::string& mnemonic, uint32_t rt, uint32_t rs, int16_t offset, bool jump, uint32_t targetAddress, int32_t rsSrc, int32_t rtSrc, bool compareToZero);
 		void logJump(const std::string& mnemonic, uint32_t targetAddress);
 		void logJumpRegister(const std::string& mnemonic, uint32_t rs, uint32_t rsSrc);
-		void logMemoryOperation(const std::string& mnemonic, uint32_t rt, int32_t offset, uint32_t base, uint32_t baseSrc);
+
 		void logLoadShift(uint32_t requestedMemory, uint32_t alignedMemory, uint32_t memoryData, uint32_t rt, uint32_t rtSrc, uint32_t rtResult);
 		void logLoadUpperImmediate(uint32_t rt, uint32_t immediate, uint32_t result);
 		void logDelayedBranch();
@@ -57,16 +59,29 @@ namespace psx
 		};
 
 		template<typename Value>
-		void logDecodedValue(const Value& value, bool lastValue) const
+		void logDecodedValue(const Value& value, bool decimal, bool lastValue, bool printAddress = false) const
 		{
-			OUTPUT_STREAM << std::hex << "0x" << value << std::dec << "(" << value << ")" << ((lastValue) ? "" : ", ");
+			OUTPUT_STREAM << std::hex << "0x";
+			
+			if (printAddress)
+			{
+				OUTPUT_STREAM << SET_ADDRES_STYLE;
+			}
+			
+			OUTPUT_STREAM << value;
+
+			if (decimal)
+			{
+				OUTPUT_STREAM << std::dec << "(" << value << ")";
+			} 
+			OUTPUT_STREAM << ((lastValue) ? "" : ", ");
 		}
 
 		template<typename ...Values>
-		void logDecodedValues(const Values... values ) const
+		void logDecodedValues(const Values... values) const
 		{
 			uint32_t idx = 0;
-			([&]() { logDecodedValue(values, idx++ == (sizeof...(values) - 1)); }(), ...);
+			([&]() { logDecodedValue(values, true, idx++ == (sizeof...(values) - 1)); }(), ...);
 			OUTPUT_STREAM << "\n";
 		}
 
@@ -90,6 +105,36 @@ namespace psx
 			OUTPUT_STREAM << " // hi = 0x" << std::hex << hi << "(" << std::dec << hi << ")";
 			OUTPUT_STREAM << " lo = 0x" << std::hex << lo << "(" << std::dec << lo << "), ";
 			logDecodedValues(ops.value ...);
+		}
+
+		template<typename ... Operands>
+		void logMemoryOperation(const std::string& mnemonic, Operands ... ops) const
+		{
+			std::array<std::string, sizeof...(ops)> operands = { ops.name ... };
+			std::array<uint32_t, sizeof...(ops)>    values = { ops.value...};
+			
+			OUTPUT_STREAM << mnemonic << " " << operands[0] << ", " << operands[1] << "(" << operands[2] << ") //";
+			logDecodedValues(values[0], values[2]);
+		}
+
+		template<typename ...Operands>
+		void logBranch(const std::string& mnemonic, bool ignoreBranch, uint32_t targetAddress, Operands... ops)
+		{
+			std::array<std::string, sizeof...(ops)> operands = { ops.name ... }; 
+			logDecodedAssembly(mnemonic, operands);
+			OUTPUT_STREAM << " // ";
+			logDecodedValues(ops.value ...);
+
+			if (ignoreBranch)
+			{
+				OUTPUT_STREAM << "                Branch is ignored\n";
+			}
+			else
+			{
+				OUTPUT_STREAM << "                Branch to ";
+				logDecodedValue(targetAddress, false, true, true);
+				OUTPUT_STREAM << "\n";
+			}
 		}
 	};
 };

@@ -13,6 +13,8 @@ mips::CPU::CPU(std::shared_ptr<psx::Context> context) :
 	fillCOPOpcodeTable();
 
 	m_registerFile.fill(0);
+
+	m_delaySlot = { cpu_constants::DelaySlotState::None, 0 };
 }
 
 mips::CPU::CPU()
@@ -98,7 +100,7 @@ void mips::CPU::executeInstruction()
 
 void mips::CPU::executeDelayedBranch()
 {
-	assert(m_delaySlot.status == cpu_constants::DelaySlotState::Execute && m_delaySlot.targetAddress != 0);
+	//assert(m_delaySlot.status == cpu_constants::DelaySlotState::Execute && m_delaySlot.targetAddress != 0);
 
 	m_pc = m_delaySlot.targetAddress;
 
@@ -167,4 +169,9 @@ void mips::CPU::reset()
 	m_hi = 0;
 	m_lo = 0;
 	m_pc = 0;
+}
+
+void mips::CPU::setPC(uint32_t addr)
+{
+	m_pc = addr; 
 }

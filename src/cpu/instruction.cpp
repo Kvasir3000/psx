@@ -19,6 +19,7 @@ bool Instruction::isPrimary()
 
 uint32_t Instruction::getPrimaryOpcode()
 {
+	auto t = (m_instructionWord & cpu_constants::PRIMARY_OPCODE_MASK) >> cpu_constants::PRIMARY_OPCODE_OFFSET;
 	return (m_instructionWord & cpu_constants::PRIMARY_OPCODE_MASK) >> cpu_constants::PRIMARY_OPCODE_OFFSET;
 }
 
