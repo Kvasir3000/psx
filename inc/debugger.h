@@ -33,9 +33,6 @@ namespace psx
 
 		void setPC(uint32_t pc);
 		void logPC(uint32_t pc);
-		void logBranch(const std::string& mnemonic, uint32_t rt, uint32_t rs, int16_t offset, bool jump, uint32_t targetAddress, int32_t rsSrc, int32_t rtSrc, bool compareToZero);
-		void logJump(const std::string& mnemonic, uint32_t targetAddress);
-		void logJumpRegister(const std::string& mnemonic, uint32_t rs, uint32_t rsSrc);
 
 		void logLoadShift(uint32_t requestedMemory, uint32_t alignedMemory, uint32_t memoryData, uint32_t rt, uint32_t rtSrc, uint32_t rtResult);
 		void logLoadUpperImmediate(uint32_t rt, uint32_t immediate, uint32_t result);
@@ -114,7 +111,7 @@ namespace psx
 			std::array<uint32_t, sizeof...(ops)>    values = { ops.value...};
 			
 			OUTPUT_STREAM << mnemonic << " " << operands[0] << ", " << operands[1] << "(" << operands[2] << ") //";
-			logDecodedValues(values[0], values[2]);
+			logDecodedValues(ops.value ...);
 		}
 
 		template<typename ...Operands>

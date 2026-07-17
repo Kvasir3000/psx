@@ -175,15 +175,6 @@ void mips::CPU::executeBranchOp(const std::string& mnemonic, const BranchOp& bra
 	
 	if (m_context->isDebug())
 	{
-	/*	m_context->getDebugger()->logBranch(mnemonic,
-			                                rt,
-			                                rs,
-			                                offset,
-			                                m_delaySlot.status == cpu_constants::DelaySlotState::Pending,
-			                                m_delaySlot.targetAddress,
-			                                m_registerFile[rs],
-			                                m_registerFile[rt],
-			                                compareToZero);*/
 		bool ignoreBranch = m_delaySlot.status != cpu_constants::DelaySlotState::Pending;
 		m_context->getDebugger()->logBranch(mnemonic, ignoreBranch, m_delaySlot.targetAddress, rs, rt, offset);
 	}
@@ -624,7 +615,6 @@ void mips::CPU::lwc2()
 	uint32_t            rtIdx = m_instruction.getRT();
 	uint32_t            baseIdx = m_instruction.getBase();
 
-	COPRegister	        rt = COPRegister(2, rtIdx, m_registerFile[rtIdx]);
 	Register<uint32_t>  base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
 	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
 
@@ -641,7 +631,8 @@ void mips::CPU::lwc2()
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logMemoryOperation("lwc2", rt, offset, base);
+		COPRegister	rt = COPRegister(2, rtIdx, m_gte.readDataRegister(rtIdx));
+		m_context->getDebugger()->logMemoryOperation("lwc2", rt, base, offset);
 	}
 	
 	raiseException("Coprocessor unusable bit is not implemented yet");

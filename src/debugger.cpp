@@ -44,51 +44,6 @@ namespace psx
 		OUTPUT_STREAM << "PC=0x" << SET_ADDRES_STYLE << pc << "-> " << std::dec;
 	}
 
-	//void Debugger::logBranch(const std::string& mnemonic,
-	//	uint32_t rt,
-	//	uint32_t rs,
-	//	int16_t offset,
-	//	bool branch,
-	//	uint32_t targetAddress,
-	//	int32_t rsSrc,
-	//	int32_t rtSrc,
-	//	bool compareToZero)
-	//{
-	//	OUTPUT_STREAM << mnemonic;
-	//	if (!compareToZero)
-	//	{
-	//		OUTPUT_STREAM << LOG_RS_RT << ". ";
-	//	}
-	//	else
-	//	{
-	//		OUTPUT_STREAM << " r" << rs << ", 0, ";
-	//	}
-	//	OUTPUT_STREAM << offset;
-
-	//	if (branch && !compareToZero)
-	//	{
-	//		OUTPUT_STREAM << " // " << LOG_SRC_RS_RT << " -> Branch to 0x" << SET_ADDRES_STYLE << targetAddress << std::dec << "\n";
-	//	}
-	//	else if (branch)
-	//	{
-	//		OUTPUT_STREAM << " // " << rsSrc << ", 0 -> Branch to 0x" << SET_ADDRES_STYLE << targetAddress << std::dec << "\n";;
-	//	}
-	//	else
-	//	{
-	//		OUTPUT_STREAM << " // " << LOG_SRC_RS_RT << " -> Branch is ignored\n";
-	//	}
-	//}
-
-	void Debugger::logJump(const std::string& mnemonic, uint32_t targetAddress)
-	{
-		OUTPUT_STREAM << mnemonic << " -> Jump to 0x" << SET_ADDRES_STYLE << targetAddress << "\n";
-	}
-
-	void Debugger::logJumpRegister(const std::string& mnemonic, uint32_t rs, uint32_t rsSrc)
-	{
-		OUTPUT_STREAM << mnemonic << " r" << rs << " -> Jump to 0x" << SET_ADDRES_STYLE << rsSrc << "\n";
-	}
-
 	void Debugger::logLoadShift(uint32_t requestedMemory,
 		uint32_t alignedMemory,
 		uint32_t memoryData,

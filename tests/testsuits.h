@@ -156,15 +156,19 @@ namespace testing
 		// Load 314 into COP2 data register 12 (SXY0)
 		TestLoadCOP2() : Test("TEST_LOAD_COP2")
 		{
-			assert(false); // first of all lwc is not loggin cop2 register properly, secondly i do not think that this test is passing
-			lwc2(12, 0, 100);
-			mfc2(4, 12);
-			addi(4, 4, -10);
+			initRegister(a0, 20);
+			lwc2(12, a0, 100);
+			mfc2(t0, 12);
+			addi(t0, t0, -10);
 			endProgram();
 
-			// 314
-			m_memory[100] = 58;
-			m_memory[101] = 1;
+			//// 314
+			//m_memory[120] = 58;
+			//m_memory[121] = 1;
+
+			//// -23
+			m_memory[120] = 0xE9;
+			m_memory[121] = 0xFF;
 		}
 	};
 
