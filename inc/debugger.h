@@ -8,8 +8,9 @@
 #include <iomanip>
 
 #include "../inc/constants/debugger_constants.h"
+#include "../inc/constants/cpu_constants.h"
 
-#define CONSOLE_OUTPUT
+//#define CONSOLE_OUTPUT
 
 namespace psx
 {
@@ -34,10 +35,7 @@ namespace psx
 		void setPC(uint32_t pc);
 		void logPC(uint32_t pc);
 
-		void logLoadShift(uint32_t requestedMemory, uint32_t alignedMemory, uint32_t memoryData, uint32_t rt, uint32_t rtSrc, uint32_t rtResult);
-		void logLoadUpperImmediate(uint32_t rt, uint32_t immediate, uint32_t result);
 		void logDelayedBranch();
-		void logDelayedLoad(uint32_t rt, uint32_t rtSrc, bool sign, bool byte, bool halfword);
 		void logShiftLogical(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t shift, uint32_t rdSrc, uint32_t rtSrc);
 		void logShiftVariable(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t rs, uint32_t rdSrc, uint32_t rtSrc, uint32_t rsSrc);
 		
@@ -110,7 +108,7 @@ namespace psx
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... };
 			std::array<uint32_t, sizeof...(ops)>    values = { ops.value...};
 			
-			OUTPUT_STREAM << mnemonic << " " << operands[0] << ", " << operands[1] << "(" << operands[2] << ") //";
+			OUTPUT_STREAM << mnemonic << " " << operands[0] << ", " << operands[1] << "(" << operands[2] << ") // ";
 			logDecodedValues(ops.value ...);
 		}
 
@@ -132,6 +130,30 @@ namespace psx
 				logDecodedValue(targetAddress, false, true, true);
 				OUTPUT_STREAM << "\n";
 			}
+		}
+
+		template<typename Operand>
+		void logDelayedLoad(Operand rt, bool sign, cpu_constants::LoadSize loadSize)
+		{
+			OUTPUT_STREAM << "Executing delayed load -> " << std::dec << rt.name << " = ";
+
+			if (!sign)
+			{
+				logDecodedValue(rt.value, true, true);
+			}
+			else if (loadSize == cpu_constants::LoadSize::Byte)
+			{
+				logDecodedValue(static_cast<int32_t>(static_cast<int8_t>(rt.value)), true, true, true);
+			}
+			else if (loadSize == cpu_constants::LoadSize::Halfword)
+			{
+				logDecodedValue(static_cast<int32_t>(static_cast<int16_t>(rt.value)), true, true, true);
+			}
+			else if (loadSize == cpu_constants::LoadSize::Word)
+			{
+				logDecodedValue(static_cast<int32_t>(rt.value), true, true, true);
+			}
+			OUTPUT_STREAM << "\n";
 		}
 	};
 };

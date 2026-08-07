@@ -282,6 +282,16 @@ namespace testing
 	{
 		addRTBaseOffsetOp(LH, rt, base, offset);
 	}
+		
+	void Test::lhu(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRTBaseOffsetOp(LHU, rt, base, offset);
+	}
+
+	void Test::lui(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRTBaseOffsetOp(LUI, rt, base, offset);
+	}
 
 	void Test::lw(uint32_t rt, uint32_t base, int16_t offset)
 	{

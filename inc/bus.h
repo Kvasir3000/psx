@@ -26,7 +26,7 @@ namespace psx
 
 	private:
 
-		static constexpr uint32_t MEMORY_SIZE = 500;
+		static constexpr uint32_t MEMORY_SIZE = 1000;
 		uint8_t m_memory[MEMORY_SIZE] = { 0 };
 	
 	};

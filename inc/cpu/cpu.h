@@ -41,13 +41,14 @@ namespace mips
 		struct DelaySlot
 		{
 			cpu_constants::DelaySlotState                              status;
-			uint32_t                                                   targetAddress;
+			uint32_t                                                   targetAddr;
+			bool													   merge;
 		} m_delaySlot;
 
 		struct DelayLoad
 		{
 			cpu_constants::DelaySlotState                              status;
-			cpu_constants::LoadSize                                    loadSize;
+			cpu_constants::LoadSize                                    size;
 			uint32_t                                                   registerIdx;
 			uint32_t                                                   data;
 			bool                                                       sign;
@@ -78,6 +79,7 @@ namespace mips
 		void executeDelayedLoad();
 
 		bool checkOverflow(int32_t num1, int32_t num2, int32_t result);
+		bool isAligned(uint32_t addr, cpu_constants::LoadSize loadSize);
 
 		/* COP0 interface */
 		void raiseException(std::string exceptionType);
@@ -93,12 +95,6 @@ namespace mips
 			bool isMultiplicative;
 		};
 
-		struct LoadOpFlags
-		{
-			cpu_constants::LoadSize size;
-			bool isSigned;
-			uint32_t alignMask = 0;
-		};
 		template<typename Type, typename ArithmeticOp>
 		void executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, const ArithmeticOpFlags& opFlags);
 		template<typename Type, typename ArithmeticOp>
@@ -109,9 +105,10 @@ namespace mips
 		void executeBranchOp(const std::string& mnemonic, const BranchOp& branchCondition, bool compareToZero);
 		void executeJumpOp(const std::string& mnemonic);
 		void excecuteJumpRegisterOp(const std::string& mnemonic);
-		template <typename LoadOp>
-		void executeLoadOp(const std::string& mnemonic, const LoadOp& readOp, const LoadOpFlags& opFlags);
-		void executeLoadWordLROp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t, uint32_t)>& adjustWord);
+		template <typename Type, typename LoadOp>
+		void executeLoadOp(const std::string& mnemonic, const LoadOp& readOp);
+		template <typename AdjustWordOp>
+		void executeLoadWordLROp(const std::string& mnemonic, const AdjustWordOp& adjustWord);
 		template<typename CopOp>
 		void executeCopOp(const std::string& mnemonic, const CopOp& copOp);
 		template<typename MovOp>

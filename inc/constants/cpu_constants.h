@@ -51,18 +51,18 @@ namespace cpu_constants
 	constexpr uint32_t WORD_ALIGNED_MASK = 0b11;
 	constexpr uint32_t HALFWORD_ALIGNED_MASK = 0b01;
 
-	enum DelaySlotState
+	enum class DelaySlotState
 	{
 		None,
 		Pending,
 		Execute,
 	};
 
-	enum LoadSize
+	enum class LoadSize
 	{
-		Byte,
-		Halfword,
-		Word
+		Byte = 1,
+		Halfword = 2,
+		Word = 4 
 	};
 
 	static constexpr uint16_t  END   =  0xDEAD; // 0xDEAD is used to indicate the end of a program cpu during testing

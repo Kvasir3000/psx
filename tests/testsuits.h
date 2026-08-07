@@ -68,17 +68,17 @@ namespace testing
 	public: 
 		TestArithmeticOps() : Test("TEST_ARITHMETIC_OPS")
 		{
-			lw(2, 0, 100);
-			initRegister(3, 3);
-			mlt(2, 3);
-			mltu(2, 3);
-			initRegister(5, 1);
-			initRegister(6, 0);
-			nor(7, 5, 6);
-			initRegister(8, 2);
-			initRegister(9, 1);
-			or_(9, 9, 8);
-			ori(9, 9, 0b1000);
+			lw(v0, zero, 100);
+			initRegister(v1, v1);
+			mlt(v0, v1);
+			mltu(v0, v1);
+			initRegister(a1, 1);
+			initRegister(a2, 0);
+			nor(a3, a1, a2);
+			initRegister(t0, 2);
+			initRegister(t1, 1);
+			or_(t1, t1, t0);
+			ori(t1, t1, 0b1000);
 			endProgram();
 
 			// 2147483647
@@ -95,60 +95,122 @@ namespace testing
 	public:
 		TestLoadWLR() : Test("TEST_LOAD_WLR")
 		{
+			initRegister(t1, 100);
 
-			lwl(1, 2, 100);
-			lwr(1, 2, 100);
+			lwl(t0, t1, 0); 
+			nop();
+			lwl(t0, t1, 1);
+			nop();
+			lwl(t0, t1, 2);
+			nop();
+			lwl(t0, t1, 3);
+			nop();
+
+			add(t0, zero, zero);
+
+			lwr(t0, t1, 3);
+			nop();
+			lwr(t0, t1, 2);
+			nop();
+			lwr(t0, t1, 1);
+			nop();
+			lwr(t0, t1, 0);
+			nop();
+
+			add(t0, zero, zero);
+
+			lwl(t0, t1, 0);
+			lwr(t0, t1, 3);
+			nop();
+			add(t0, zero, zero);
+			lwl(t0, t1, 2);
+			lwr(t0, t1, 2);
+			nop();
+			add(t0, zero, zero);
+			lwl(t0, t2, 103);
+			lwr(t0, t2, 105);
+			nop();
 			endProgram();
 			//assert(false); // This op is definetly broken, the delay slot should be added, but only after both lwr/lwl or lwl/lwr are called together, no delay slot in between them
 			// word1:|AA|BB|CC|DD|
+			//       |--|--|--|--|			
+			// word2:|AD|AB|EE|FF|
 			//       |--|--|--|--|
 			m_memory[100] = 0xDD;
 			m_memory[101] = 0xCC;
 			m_memory[102] = 0xBB;
 			m_memory[103] = 0xAA;
+			m_memory[104] = 0xFF;
+			m_memory[105] = 0xEE;
+			m_memory[106] = 0xAB;
+			m_memory[107] = 0xAD;
 		}
 	};
 
-	class TestLoadOperations : public Test
+	class TestLoad : public Test
+	{
+	public: 
+		TestLoad() : Test("TEST_LOAD")
+		{
+			lw(t0, zero, 0x100);
+			nop();
+			lui(t0, zero, 0xAABB);
+			endProgram();
+			m_memory[0x100] = 0xEF;
+			m_memory[0x101] = 0xBE;			
+			m_memory[0x102] = 0xDA;
+			m_memory[0x103] = 0xDE;
+		};
+	};
+
+	class TestLoadByteOperations : public Test
 	{
 	public:
-		TestLoadOperations() : Test("TEST_LOAD_OPERATIONS")
+		TestLoadByteOperations() : Test("TEST_LOAD_BYTE")
 		{
-			initRegister(7, 0x102);
-			lb(2, 7, -2);
-			lbu(7, 9, -2);
-			initRegister(2, 18);
-			initRegister(9, 20);
-			initRegister(12, 0xFE);
-			lh(12, 12, 3);
-			lbu(12, 12, 3);
-			addi(12, 12, 522);
-			addi(12, 12, 522);
-			addi(3, 3, -12);
-			add(2, 3, 3);
-			add(9, 3, 3);
-			addi(13, 13, 0x100);
-			lw(19, 13, 3);
+			initRegister(t0, 0xF0);
+			lb(t1, t0, 3);
 			nop();
+			lb(t2, t1, 0xF4 - 0x7F);
 			nop();
-			endProgram();
-
-			m_memory[0x100] = -4;
-			// 542:
-			/*m_memory[0x101] = 2;
-			m_memory[0x102] = 30*/;
-
-			//-542:
-			m_memory[0x101] = 0xFD;
-			m_memory[0x102] = 0xE2;
-
-			// Data for load word instruction: 3224372736
-			m_memory[0x103] = 0;
-			m_memory[0x104] = 6;
-			m_memory[0x105] = 48;
-			m_memory[0x106] = 192;
+			lbu(t3, t2, 0x80 + 0xF3);
+			nop();
+			lbu(t4, t3, 0xF4 - 0x7F);
+			nop();
+			endProgram();	
+			m_memory[0xF3] = 0x7F; 
+			// 0x80 -> uin8_t = 257 / int8_t = -128 
+			m_memory[0xF4] = 0x80;
+			m_memory[0xF5] = 0x80;
 		}
 	};
+
+	class TestLoadHalfwordOperations : public Test
+	{
+	public:
+		TestLoadHalfwordOperations() : Test("TEST_LOAD_HALFWORD")
+		{
+			initRegister(t0, 0x105);
+			lh(t1, t0, -5);
+			nop();
+			lh(t2, t1, 0);
+			nop();
+			addi(t2, t2, 0x4000);
+			lhu(t3, t2, 0x4100);
+			nop();
+			lhu(t4, t3, 0);
+			nop();
+
+			// 0x101
+			m_memory[0x100] = 0x02;
+			m_memory[0x101] = 0x01;
+			// 0x8000 -> uin16_t = 32768 / int16_t = -=32768
+			m_memory[0x102] = 0x00;
+			m_memory[0x103] = 0x80;
+			endProgram();
+		}
+	};
+
 
 	class TestLoadCOP2 : public Test
 	{

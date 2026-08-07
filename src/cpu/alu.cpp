@@ -148,13 +148,13 @@ void mips::CPU::executeBranchZeroOp(const std::string& mnemonic, const BranchZer
 	if (branchCondition(rs.value))
 	{
 		m_delaySlot.status = cpu_constants::DelaySlotState::Pending;
-		m_delaySlot.targetAddress = m_pc + cpu_constants::WORD_SIZE_BYTES + (offset.value << 2);
+		m_delaySlot.targetAddr = m_pc + cpu_constants::WORD_SIZE_BYTES + (offset.value << 2);
 	}
 
 	if (m_context->isDebug())
 	{
 		bool ignoreBranch = m_delaySlot.status != cpu_constants::DelaySlotState::Pending;
-		m_context->getDebugger()->logBranch(mnemonic, ignoreBranch, m_delaySlot.targetAddress, rs, offset);
+		m_context->getDebugger()->logBranch(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, offset);
 	}
 };
 
@@ -170,13 +170,13 @@ void mips::CPU::executeBranchOp(const std::string& mnemonic, const BranchOp& bra
 	if (branchCondition(rs.value, rt.value))
 	{
 		m_delaySlot.status = cpu_constants::DelaySlotState::Pending;
-		m_delaySlot.targetAddress = m_pc + cpu_constants::WORD_SIZE_BYTES + (offset.value << 2);
+		m_delaySlot.targetAddr = m_pc + cpu_constants::WORD_SIZE_BYTES + (offset.value << 2);
 	}
 	
 	if (m_context->isDebug())
 	{
 		bool ignoreBranch = m_delaySlot.status != cpu_constants::DelaySlotState::Pending;
-		m_context->getDebugger()->logBranch(mnemonic, ignoreBranch, m_delaySlot.targetAddress, rs, rt, offset);
+		m_context->getDebugger()->logBranch(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, rt, offset);
 	}
 }
 
@@ -184,10 +184,10 @@ void mips::CPU::executeJumpOp(const std::string& mnemonic)
 {
 	uint32_t target = m_instruction.getJumpTarget();
 	m_delaySlot.status = cpu_constants::DelaySlotState::Pending;
-	m_delaySlot.targetAddress = ((m_pc + cpu_constants::WORD_SIZE_BYTES) & cpu_constants::PC_HIGH_BITS_MASK) | (target << 2);
+	m_delaySlot.targetAddr = ((m_pc + cpu_constants::WORD_SIZE_BYTES) & cpu_constants::PC_HIGH_BITS_MASK) | (target << 2);
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logBranch(mnemonic, false, m_delaySlot.targetAddress, Immediate<uint32_t>(target));
+		m_context->getDebugger()->logBranch(mnemonic, false, m_delaySlot.targetAddr, Immediate<uint32_t>(target));
 	}
 }
 
@@ -203,7 +203,7 @@ void mips::CPU::excecuteJumpRegisterOp(const std::string& mnemonic)
 		m_registerFile[rdIdx] = m_pc + (2 * cpu_constants::WORD_SIZE_BYTES);
 	}
 	m_delaySlot.status = cpu_constants::DelaySlotState::Pending; 
-	m_delaySlot.targetAddress = rs.value;
+	m_delaySlot.targetAddr = rs.value;
 
 	if (m_context->isDebug())
 	{
@@ -211,8 +211,8 @@ void mips::CPU::excecuteJumpRegisterOp(const std::string& mnemonic)
 	}
 }
 
-template <typename LoadOp>
-void mips::CPU::executeLoadOp(const std::string& mnemonic, const LoadOp& loadOp, const LoadOpFlags& opFlags)
+template <typename Type, typename LoadOp>
+void mips::CPU::executeLoadOp(const std::string& mnemonic, const LoadOp& loadOp)
 {
 	uint32_t            rtIdx = m_instruction.getRT();
 	uint32_t            baseIdx = m_instruction.getBase();
@@ -221,19 +221,14 @@ void mips::CPU::executeLoadOp(const std::string& mnemonic, const LoadOp& loadOp,
 	Register<uint32_t>  base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
 	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
 
-	uint32_t address = base.value + offset.value;
-
-	if (opFlags.size != cpu_constants::LoadSize::Byte && (address & opFlags.alignMask))
-	{
-		m_context->getDebugger()->logWarning("Accessing unaligned memory:");
-	}
+	uint32_t addr = static_cast<uint32_t>(base.value + offset.value);
 
 	DelayLoad load;
 	load.status = cpu_constants::DelaySlotState::Pending;
-	load.data = loadOp(address);
+	load.data = loadOp(addr);
 	load.registerIdx = rtIdx; 
-	load.loadSize = opFlags.size;
-	load.sign = opFlags.isSigned;
+	load.size = static_cast<cpu_constants::LoadSize>(sizeof(Type));
+	load.sign = std::is_signed_v<Type>;
 
 	m_delayLoads.emplace(load);
 
@@ -241,31 +236,53 @@ void mips::CPU::executeLoadOp(const std::string& mnemonic, const LoadOp& loadOp,
 	{
 		m_context->getDebugger()->logMemoryOperation(mnemonic, rt, offset, base);
 	}
+
+	if (isAligned(addr, load.size))
+	{
+		m_context->getDebugger()->logWarning("Accessing unaligned memory:");
+	}
 }
 
-void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t, uint32_t)>& adjustWord)
+template<typename AdjustWordOp>
+void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const AdjustWordOp& adjustWord)
 {
 	// Have no idea if this is working correctly, it is passing my test, but due to big/little endian difference my understanding of this may be wrong, check other emulators 
 	uint32_t            rtIdx = m_instruction.getRT();
 	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
 	uint32_t            baseIdx = m_instruction.getBase();
 
-	uint32_t address = m_registerFile[baseIdx] + offset.value;
-	uint32_t alignedAddress = address & ~cpu_constants::WORD_ALIGNED_MASK;
-	uint32_t word = m_context->getBus()->readWord(alignedAddress);
+	uint32_t effectiveAddr = m_registerFile[baseIdx] + offset.value;
+	uint32_t alignedAddr = effectiveAddr & ~cpu_constants::WORD_ALIGNED_MASK;
+	uint32_t word = m_context->getBus()->readWord(alignedAddr);
+	uint32_t sourceRt = m_registerFile[rtIdx];
 
-	uint32_t result = adjustWord(rtIdx, address, word);
+	if (!m_delayLoads.empty() && m_delayLoads.front().registerIdx == rtIdx)
+	{
+		sourceRt = m_delayLoads.front().data; // merge it with a previous rt call
+	}
+	uint32_t result = adjustWord(sourceRt, effectiveAddr, word);
 
 	if (m_context->isDebug())
 	{
-		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
 		Register<uint32_t> base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
+		Register<uint32_t> rt   = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
 		m_context->getDebugger()->logMemoryOperation(mnemonic, rt, offset, base);
-		// Log below may need to be refactored with template or i can remove it all together
-		//m_context->getDebugger()->logLoadShift(address, alignedAddress, word, rt, m_registerFile[rt], result);
 	}
 
-	m_registerFile[rtIdx] = result;
+	DelayLoad load;
+	load.status = cpu_constants::DelaySlotState::Pending;
+	load.data = result;
+	load.registerIdx = rtIdx;
+	load.size = cpu_constants::LoadSize::Word;
+	load.sign = true;
+	if (!m_delayLoads.empty())
+	{
+		m_delayLoads.front() = load;
+	}
+	else
+	{
+		m_delayLoads.emplace(load);
+	}
 }
 
 template<typename CopOp>
@@ -308,8 +325,8 @@ void mips::CPU::executeStoreOp(const std::string& mnemonic, const StoreOp& store
 	Register<uint32_t>  base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
 	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
 
-	uint32_t address = offset.value + m_registerFile[baseIdx];
-	storeOp(address, m_registerFile[rtIdx]);
+	uint32_t addr = offset.value + m_registerFile[baseIdx];
+	storeOp(addr, m_registerFile[rtIdx]);
 	
 	if (m_context->isDebug())
 	{
@@ -332,7 +349,6 @@ void mips::CPU::executeShiftOp(const std::string& mnemonic, const std::function<
 		if (isLogical)
 		{
 			m_context->getDebugger()->logShiftLogical(mnemonic, rd, rt, shift, result, m_registerFile[rt]);
-
 		}
 		else
 		{
@@ -559,57 +575,48 @@ void mips::CPU::jr()
 
 void mips::CPU::lb()
 {
-	auto loadByteOp = [this](uint32_t memoryAddress)->int32_t { return m_context->getBus()->readByte(memoryAddress); };
-	LoadOpFlags opFlags = {cpu_constants::LoadSize::Byte, true };
-	executeLoadOp("lb", loadByteOp, opFlags);
+	auto loadByteOp = [this](uint32_t memoryAddr)->int8_t { return m_context->getBus()->readByte(memoryAddr); };
+	executeLoadOp<int8_t>("lb", loadByteOp);
 }
 
 void mips::CPU::lbu()
 {
-	auto loadByteOp = [this](uint32_t memoryAddress)->uint32_t { return m_context->getBus()->readByte(memoryAddress); };
-	LoadOpFlags opFlags = { cpu_constants::LoadSize::Byte, false };
-	executeLoadOp("lbu", loadByteOp, opFlags);
+	auto loadByteOp = [this](uint32_t memoryAddr)->uint8_t { return m_context->getBus()->readByte(memoryAddr); };
+	executeLoadOp<uint8_t>("lbu", loadByteOp);
 }
 
 void mips::CPU::lh()
 {
-	auto loadHalfwordOp = [this](uint32_t memoryAddress)->int32_t { return m_context->getBus()->readHalfword(memoryAddress); };
-	LoadOpFlags opFlags = { cpu_constants::LoadSize::Halfword, true, cpu_constants::HALFWORD_ALIGNED_MASK};
-	executeLoadOp("lh", loadHalfwordOp, opFlags);
+	auto loadHalfwordOp = [this](uint32_t memoryAddr)->int16_t { return m_context->getBus()->readHalfword(memoryAddr); };
+	executeLoadOp<int16_t>("lh", loadHalfwordOp);
 };
 
 void mips::CPU::lhu()
 {
-	auto loadHalfwordOp = [this](uint32_t memoryAddress)->uint32_t { return m_context->getBus()->readHalfword(memoryAddress); };
-	LoadOpFlags opFlags = { cpu_constants::LoadSize::Halfword, false, cpu_constants::HALFWORD_ALIGNED_MASK };
-	executeLoadOp("lhu", loadHalfwordOp, opFlags);
+	auto loadHalfwordOp = [this](uint32_t memoryAddr)->uint16_t { return m_context->getBus()->readHalfword(memoryAddr); };
+	executeLoadOp<uint16_t>("lhu", loadHalfwordOp);
 }
 
 void mips::CPU::lui()
 {
-	uint32_t rt = m_instruction.getRT();
-	uint16_t immediate = m_instruction.getImmediate();
+	uint32_t rtIdx = m_instruction.getRT();
+	Immediate<uint16_t> immediate = Immediate<uint16_t>(m_instruction.getImmediate());
     
-	m_registerFile[rt] = immediate << 16; 
+	m_registerFile[rtIdx] = immediate.value << 16;
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logLoadUpperImmediate(rt, immediate, m_registerFile[rt]);
+		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+		m_context->getDebugger()->logGenericRegOp("lui", rt, immediate);
 	}
 }
 
 void mips::CPU::lw()
 {
-	auto loadWord = [this](uint32_t memoryAddress)->uint32_t { return m_context->getBus()->readWord(memoryAddress); };
-	LoadOpFlags opFlags = { cpu_constants::LoadSize::Word, false, cpu_constants::WORD_ALIGNED_MASK};
-	executeLoadOp("lw", loadWord, opFlags);
+	auto loadWord = [this](uint32_t memoryAddr)->uint32_t { return m_context->getBus()->readWord(memoryAddr); };
+	executeLoadOp<uint32_t>("lw", loadWord);
 }
 
-/*
- I am not sure if delay slot is needed here, based on the no$ looks like yes:
- "Writing to cop2 registers has a delay of 2..3 clock cycles"
- But for now i am loading it immediately
-*/
 void mips::CPU::lwc2()
 {
 	uint32_t            rtIdx = m_instruction.getRT();
@@ -618,19 +625,19 @@ void mips::CPU::lwc2()
 	Register<uint32_t>  base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
 	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
 
-	uint32_t address = base.value + offset.value;
+	uint32_t addr = base.value + offset.value;
 
-	if (cpu_constants::LoadSize::Word != cpu_constants::LoadSize::Byte && (address & cpu_constants::WORD_ALIGNED_MASK))
+	if (isAligned(addr, cpu_constants::LoadSize::Word))
 	{
 		m_context->getDebugger()->logWarning("Accessing unaligned memory:");
 	}
 
-	uint32_t word = m_context->getBus()->readWord(address);
+	uint32_t word = m_context->getBus()->readWord(addr);
 	m_gte.writeDataRegister(rtIdx, word);
 
 
 	if (m_context->isDebug())
-	{
+	{	
 		COPRegister	rt = COPRegister(2, rtIdx, m_gte.readDataRegister(rtIdx));
 		m_context->getDebugger()->logMemoryOperation("lwc2", rt, base, offset);
 	}
@@ -642,12 +649,12 @@ void mips::CPU::lwc2()
 void mips::CPU::lwl()
 {
 	// Have no idea if this is working correctly, it is passing my test, but due to big/little endian difference my understanding of this may be wrong, check other emulators 
-	auto adjustLWLOp = [this](uint32_t rt, uint32_t address, uint32_t word)->uint32_t
-	{
-		uint32_t wordOffset = (cpu_constants::WORD_ALIGNED_MASK - (address & cpu_constants::WORD_ALIGNED_MASK)) * 8;
+	auto adjustLWLOp = [this](uint32_t rt, uint32_t addr, uint32_t word)->uint32_t
+	{		
+		uint32_t wordOffset = (cpu_constants::WORD_ALIGNED_MASK - (addr & cpu_constants::WORD_ALIGNED_MASK)) * cpu_constants::BYTE_SIZE_BITS;
 		uint32_t adjustedWord = word << wordOffset;
 		uint32_t rightSideMask = (cpu_constants::WORD_MASK >> (cpu_constants::WORD_SIZE_BITS - wordOffset));
-		uint32_t result = adjustedWord | (m_registerFile[rt] & rightSideMask);
+		uint32_t result = adjustedWord | (rt & rightSideMask);
 		return result;
 	};
 
@@ -657,12 +664,12 @@ void mips::CPU::lwl()
 void mips::CPU::lwr()
 {
 	// Have no idea if this is working correctly, it is passing my test, but due to big/little endian difference my understanding of this may be wrong, check other emulators 
-	auto adjustLWROp = [this](uint32_t rt, uint32_t address, uint32_t word)->uint32_t
+	auto adjustLWROp = [this](uint32_t rt, uint32_t addr, uint32_t word)->uint32_t
 	{
-		uint32_t wordOffset = (address & cpu_constants::WORD_ALIGNED_MASK) * 8;
+		uint32_t wordOffset = (addr & cpu_constants::WORD_ALIGNED_MASK) * cpu_constants::BYTE_SIZE_BITS;
 		uint32_t adjustedWord = word >> wordOffset;
 		uint32_t leftSideMask = (cpu_constants::WORD_MASK << (cpu_constants::WORD_SIZE_BITS - wordOffset));
-		uint32_t result = adjustedWord | (m_registerFile[rt] & leftSideMask);
+		uint32_t result = adjustedWord | (rt & leftSideMask);
 		return result;
 	};
 
@@ -755,13 +762,13 @@ void mips::CPU::ori()
 
 void mips::CPU::sb()
 {
-	auto sbOp = [this](uint32_t address, uint32_t data)->void { m_context->getBus()->storeByte(address, data); };
+	auto sbOp = [this](uint32_t addr, uint32_t data)->void { m_context->getBus()->storeByte(addr, data); };
 	executeStoreOp("sb", sbOp);
 }
 
 void mips::CPU::sh()
 {
-	auto shOp = [this](uint32_t address, uint32_t data)->void { m_context->getBus()->storeHalfword(address, data); };
+	auto shOp = [this](uint32_t addr, uint32_t data)->void { m_context->getBus()->storeHalfword(addr, data); };
 	executeStoreOp("sh", shOp);
 }
 

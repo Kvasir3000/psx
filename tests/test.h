@@ -13,7 +13,7 @@ namespace testing
 class Test
 {
 private: 
-	static constexpr uint32_t				   MEMORY_SIZE = 500;
+	static constexpr uint32_t				   MEMORY_SIZE = 1000;
 	std::string								   m_name; 
 	std::unordered_map<std::string, uint32_t>  m_labelAddrMap;
 
@@ -83,6 +83,8 @@ public:
 	void lb(uint32_t rt, uint32_t base, int16_t offset);
 	void lbu(uint32_t rt, uint32_t base, int16_t offset);
 	void lh(uint32_t rt, uint32_t base, int16_t offset);
+	void lhu(uint32_t rt, uint32_t base, int16_t offset);
+	void lui(uint32_t rt, uint32_t base, int16_t offset);
 	void lw(uint32_t rt, uint32_t base, int16_t offset);
 	void lwl(uint32_t rt, uint32_t base, int16_t offset);
 	void lwr(uint32_t rt, uint32_t base, int16_t offset);

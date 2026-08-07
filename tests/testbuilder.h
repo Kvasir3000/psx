@@ -25,7 +25,9 @@ namespace testing
 		TestBuilder& addTestSetOn();
 		TestBuilder& addTestArithmeticOps();
 		TestBuilder& addTestLoadWLR();
-		TestBuilder& addTestLoadOperations();
+		TestBuilder& addTestLoad();
+		TestBuilder& addTestLoadByteOperations();
+		TestBuilder& addTestLoadHalfwordOperations();
 		TestBuilder& addTestLoadCOP2();
 		TestBuilder& addTestBranch();
 		TestBuilder& addTestJump();

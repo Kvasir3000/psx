@@ -85,9 +85,9 @@ void mips::CPU::executeInstruction()
 		m_delaySlot.status = cpu_constants::DelaySlotState::Execute;
 	}
 
-	if (!m_delayLoads.empty() && m_delayLoads.front().status == cpu_constants::Pending)
-	{
-		m_delayLoads.front().status = cpu_constants::DelaySlotState::Execute;
+	if (!m_delayLoads.empty() && m_delayLoads.front().status == cpu_constants::DelaySlotState::Pending)
+	{		m_delayLoads.front().status = cpu_constants::DelaySlotState::Execute;
+
 	}
 	
 	if (m_instructionCallback)
@@ -102,7 +102,7 @@ void mips::CPU::executeDelayedBranch()
 {
 	//assert(m_delaySlot.status == cpu_constants::DelaySlotState::Execute && m_delaySlot.targetAddress != 0);
 
-	m_pc = m_delaySlot.targetAddress;
+	m_pc = m_delaySlot.targetAddr;
 
 	if (m_context->isDebug())
 	{
@@ -112,36 +112,22 @@ void mips::CPU::executeDelayedBranch()
 
 
 	m_delaySlot.status = cpu_constants::DelaySlotState::None;
-	m_delaySlot.targetAddress = 0;
+	m_delaySlot.targetAddr = 0;
 
 }
 
 void mips::CPU::executeDelayedLoad()
 {
 	DelayLoad load = m_delayLoads.front();
+
 	assert(load.status == cpu_constants::DelaySlotState::Execute && load.registerIdx != 0);
-	
 
-	bool isByte = load.loadSize == cpu_constants::LoadSize::Byte;
-	bool isHalfword = load.loadSize == cpu_constants::LoadSize::Halfword;
-	bool isWord = load.loadSize == cpu_constants::LoadSize::Word;
-
-	if (isWord || !load.sign)
-	{
-		m_registerFile[load.registerIdx] = load.data;
-	}
-	else if (isByte) 
-	{
-		m_registerFile[load.registerIdx] = static_cast<int8_t>(load.data);
-	}
-	else if (isHalfword)
-	{
-		m_registerFile[load.registerIdx] = static_cast<int16_t>(load.data);
-	}
+	m_registerFile[load.registerIdx] = load.data;
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logDelayedLoad(load.registerIdx, load.data, load.sign, isByte, isHalfword);
+		Register<uint32_t> rt = Register<uint32_t>(load.registerIdx, m_registerFile[load.registerIdx]);
+		m_context->getDebugger()->logDelayedLoad(rt, load.sign, load.size);
 	}
 
 	m_delayLoads.pop();
@@ -162,6 +148,20 @@ bool mips::CPU::checkOverflow(int32_t num1, int32_t num2, int32_t result)
 	}
 	return false;
 }
+
+bool mips::CPU::isAligned(uint32_t addr, cpu_constants::LoadSize loadSize)
+{
+	if (loadSize == cpu_constants::LoadSize::Halfword && (addr & cpu_constants::HALFWORD_ALIGNED_MASK))
+	{
+		return true;
+	}
+	else if (loadSize == cpu_constants::LoadSize::Word && (addr & cpu_constants::WORD_ALIGNED_MASK))
+	{
+		return true;
+	}
+	return false;
+}
+
 
 void mips::CPU::reset()
 {

@@ -44,43 +44,9 @@ namespace psx
 		OUTPUT_STREAM << "PC=0x" << SET_ADDRES_STYLE << pc << "-> " << std::dec;
 	}
 
-	void Debugger::logLoadShift(uint32_t requestedMemory,
-		uint32_t alignedMemory,
-		uint32_t memoryData,
-		uint32_t rt,
-		uint32_t rtSrc,
-		uint32_t rtResult)
-	{
-		OUTPUT_STREAM << "                Requested memory: 0x" << SET_ADDRES_STYLE << requestedMemory << " -> Aligned memory: 0x" << SET_ADDRES_STYLE << alignedMemory << " = 0x" << memoryData << "\n";
-		OUTPUT_STREAM << "                rt" << rt << ": 0x" << SET_ADDRES_STYLE << rtSrc << " -> 0x" << SET_ADDRES_STYLE << rtResult << "\n";
-	}
-
-	void Debugger::logLoadUpperImmediate(uint32_t rt, uint32_t immediate, uint32_t result)
-	{
-		OUTPUT_STREAM << "ldi rt" << rt << ", " << immediate << " // " << result << "\n";
-	}
-
 	void Debugger::logDelayedBranch()
 	{
 		OUTPUT_STREAM << "Executing delayed branch -> 0x" << SET_ADDRES_STYLE << m_pc << "\n";
-	}
-
-	void Debugger::logDelayedLoad(uint32_t rt, uint32_t rtSrc, bool sign, bool byte, bool halfword)
-	{
-		OUTPUT_STREAM << "Executing delayed load -> r" << std::dec << rt << " = ";
-
-		if (!sign)
-		{
-			OUTPUT_STREAM << rtSrc << "\n";
-		}
-		else if (byte)
-		{
-			OUTPUT_STREAM << static_cast<int32_t>(static_cast<int8_t>(rtSrc)) << "\n";
-		}
-		else if (halfword)
-		{
-			OUTPUT_STREAM << static_cast<int32_t>(static_cast<int16_t>(rtSrc)) << "\n";
-		}
 	}
 
 	void Debugger::logShiftLogical(const std::string& mnemonic,

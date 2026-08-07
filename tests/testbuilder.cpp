@@ -28,14 +28,24 @@ namespace testing
 		return addTest<TestArithmeticOps>();
 	}
 
+	TestBuilder& TestBuilder::addTestLoad()
+	{
+		return addTest<TestLoad>();
+	}
+
 	TestBuilder& TestBuilder::addTestLoadWLR()
 	{
 		return addTest<TestLoadWLR>();
 	}
 
-	TestBuilder& TestBuilder::addTestLoadOperations()
+	TestBuilder& TestBuilder::addTestLoadByteOperations()
 	{
-		return addTest<TestLoadOperations>();
+		return addTest<TestLoadByteOperations>();
+	}
+
+	TestBuilder& TestBuilder::addTestLoadHalfwordOperations()
+	{
+		return addTest<TestLoadHalfwordOperations>();
 	}
 
 	TestBuilder& TestBuilder::addTestLoadCOP2()

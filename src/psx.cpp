@@ -14,10 +14,12 @@ psx::PlayStation::PlayStation() :
 							  addTestSetOn().
 							  addTestArithmeticOps().
 		                      addTestStore().
-							  addTestLoadWLR().
-														  */
-
-						     addTestLoadCOP2().
+							  */
+						//	 addTestLoadWLR().
+							 addTestLoadByteOperations().
+							 addTestLoadHalfwordOperations().
+							 addTestLoad().
+						     //addTestLoadCOP2().
 							 // addTestBranch().
 							 // addTestJump().
 		                      build();

@@ -25,7 +25,7 @@ uint8_t psx::BUS::readByte(uint32_t memoryAddress)
 
 uint16_t psx::BUS::readHalfword(uint32_t memoryAddress)
 {	
-	return (m_memory[memoryAddress] << 8) | m_memory[memoryAddress + 1];
+	return (m_memory[memoryAddress + 1] << 8) | m_memory[memoryAddress];
 }
 
 uint32_t psx::BUS::readWord(uint32_t memoryAddress)
