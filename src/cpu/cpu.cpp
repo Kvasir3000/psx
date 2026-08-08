@@ -86,8 +86,8 @@ void mips::CPU::executeInstruction()
 	}
 
 	if (!m_delayLoads.empty() && m_delayLoads.front().status == cpu_constants::DelaySlotState::Pending)
-	{		m_delayLoads.front().status = cpu_constants::DelaySlotState::Execute;
-
+	{		
+		m_delayLoads.front().status = cpu_constants::DelaySlotState::Execute;
 	}
 	
 	if (m_instructionCallback)

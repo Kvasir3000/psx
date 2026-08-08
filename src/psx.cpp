@@ -10,18 +10,17 @@ psx::PlayStation::PlayStation() :
 	m_isRunning(true)
 {
 	testing::TestBuilder testBuilder;
-	m_cpu_tests = testBuilder. /*addTestMove().
+	m_cpu_tests = testBuilder.addTestMove().
 							  addTestSetOn().
 							  addTestArithmeticOps().
-		                      addTestStore().
-							  */
-						//	 addTestLoadWLR().
-							 addTestLoadByteOperations().
-							 addTestLoadHalfwordOperations().
-							 addTestLoad().
-						     //addTestLoadCOP2().
-							 // addTestBranch().
-							 // addTestJump().
+						   	  addTestLoadWLR().
+						      addTestStore().
+							  addTestLoadByteOperations().
+							  addTestLoadHalfwordOperations().
+							  addTestLoad().
+						      addTestLoadCOP2().
+							  addTestBranch().
+							  addTestJump().
 		                      build();
 
 	readProgramFile();

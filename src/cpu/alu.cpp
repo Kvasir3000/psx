@@ -5,6 +5,7 @@
 
 
 
+// TODO: Remove the function<> types below and use raw pointers instead, compare the perfomance as well
 void mips::CPU::fillPrimaryOpcodeTable()
 {
 	m_primaryOpcodeTable[ADDI]  = std::bind(&CPU::addi,  this);
@@ -246,7 +247,6 @@ void mips::CPU::executeLoadOp(const std::string& mnemonic, const LoadOp& loadOp)
 template<typename AdjustWordOp>
 void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const AdjustWordOp& adjustWord)
 {
-	// Have no idea if this is working correctly, it is passing my test, but due to big/little endian difference my understanding of this may be wrong, check other emulators 
 	uint32_t            rtIdx = m_instruction.getRT();
 	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
 	uint32_t            baseIdx = m_instruction.getBase();
@@ -286,7 +286,7 @@ void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const AdjustWor
 }
 
 template<typename CopOp>
-void mips::CPU:: executeCopOp(const std::string& mnemonic, const CopOp& copOp)
+void mips::CPU::executeCopOp(const std::string& mnemonic, const CopOp& copOp)
 {
 	uint32_t rdIdx = m_instruction.getRD();
 	uint32_t rtIdx = m_instruction.getRT();
@@ -336,27 +336,18 @@ void mips::CPU::executeStoreOp(const std::string& mnemonic, const StoreOp& store
 	raiseException("Store exceptions are not implemented yet"); 
 }
 
-void mips::CPU::executeShiftOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t&)>& shiftOp, bool isLogical)
+template<typename SourceValue, typename ShiftValue>
+void mips::CPU::executeShiftOp(const std::string& mnemonic, const SourceValue& source, const ShiftValue& shift)
 {
-	uint32_t rt = m_instruction.getRT();
-	uint32_t rd = m_instruction.getRD();
-	uint32_t shift = 0; 
+	uint32_t rdIdx = m_instruction.getRD();
 
-	uint32_t result = shiftOp(m_registerFile[rt], shift);
+	m_registerFile[rdIdx] = source.value << shift.value;
 
 	if (m_context->isDebug())
 	{
-		if (isLogical)
-		{
-			m_context->getDebugger()->logShiftLogical(mnemonic, rd, rt, shift, result, m_registerFile[rt]);
-		}
-		else
-		{
-			m_context->getDebugger()->logShiftVariable(mnemonic, rd, rt, m_instruction.getRS(), result, m_registerFile[rt], shift);
-		}
+		Register<uint32_t> rd = Register<uint32_t>(rdIdx, m_registerFile[rdIdx]);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, source, shift);
 	}
-
-	m_registerFile[rd] = result;
 }
 
 
@@ -774,14 +765,19 @@ void mips::CPU::sh()
 
 void mips::CPU::sll()
 {
-	auto shiftLeftLogicalOp = [this](uint32_t value, uint32_t& shift)->uint32_t { shift = m_instruction.getSA(); return value << shift; };
-	executeShiftOp("sll", shiftLeftLogicalOp, true);
+	uint32_t rtIdx = m_instruction.getRT();
+	Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+	Immediate<uint32_t> sa = Immediate<uint32_t>(m_instruction.getSA());
+	executeShiftOp("sll", rt, sa);
 }
 
 void mips::CPU::sllv()
 {
-	auto shiftLeftVariableOp = [this](uint32_t value, uint32_t& shift)->uint32_t { shift = m_registerFile[m_instruction.getRS()]; return value << shift; };
-	executeShiftOp("sllv", shiftLeftVariableOp, false);
+	uint32_t rtIdx = m_instruction.getRT();
+	uint32_t rsIdx = m_instruction.getRS();
+	Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+	Register<uint32_t> rs = Register<uint32_t>(rsIdx, m_registerFile[rsIdx]);
+	executeShiftOp("sllv", rt, rs);
 }
 
 void mips::CPU::slt()

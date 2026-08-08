@@ -115,7 +115,8 @@ namespace mips
 		void executeMovHiLo(const std::string& mnemonic, const MovOp& movOp);
 		template<typename StoreOp>
 		void executeStoreOp(const std::string& mnemonic, const StoreOp& storeOp);
-		void executeShiftOp(const std::string& mnemonic, const std::function<uint32_t(uint32_t, uint32_t&)>& shiftOp, bool isLogical);
+		template<typename SourceValue, typename ShiftValue>
+		void executeShiftOp(const std::string& mnemonic, const SourceValue& source, const ShiftValue& shift);
 		template<typename Type, typename SetOp>
 		void executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp);
 		template<typename Type, typename SetOp>

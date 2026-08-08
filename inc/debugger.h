@@ -36,8 +36,6 @@ namespace psx
 		void logPC(uint32_t pc);
 
 		void logDelayedBranch();
-		void logShiftLogical(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t shift, uint32_t rdSrc, uint32_t rtSrc);
-		void logShiftVariable(const std::string& mnemonic, uint32_t rd, uint32_t rt, uint32_t rs, uint32_t rdSrc, uint32_t rtSrc, uint32_t rsSrc);
 		
 		template<uint32_t N>
 		void logDecodedAssembly(const std::string& mnemonic, const std::array<std::string, N>& operands) const

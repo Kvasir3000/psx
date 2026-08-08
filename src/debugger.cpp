@@ -48,25 +48,4 @@ namespace psx
 	{
 		OUTPUT_STREAM << "Executing delayed branch -> 0x" << SET_ADDRES_STYLE << m_pc << "\n";
 	}
-
-	void Debugger::logShiftLogical(const std::string& mnemonic,
-		uint32_t rd,
-		uint32_t rt,
-		uint32_t sa,
-		uint32_t rdSrc,
-		uint32_t rtSrc)
-	{
-		OUTPUT_STREAM << mnemonic << " r" << rd << ", r" << rt << ", sa // " << rdSrc << ", " << rtSrc << ", " << sa << "\n";
-	}
-
-	void Debugger::logShiftVariable(const std::string& mnemonic,
-		uint32_t rd,
-		uint32_t rt,
-		uint32_t rs,
-		uint32_t rdSrc,
-		uint32_t rtSrc,
-		uint32_t rsSrc)
-	{
-		OUTPUT_STREAM << mnemonic << " r" << rd << ", r" << rt << ", r" << rs << " // " << rdSrc << ", " << rtSrc << ", " << rsSrc << "\n";
-	}
 }

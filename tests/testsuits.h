@@ -131,7 +131,6 @@ namespace testing
 			lwr(t0, t2, 105);
 			nop();
 			endProgram();
-			//assert(false); // This op is definetly broken, the delay slot should be added, but only after both lwr/lwl or lwl/lwr are called together, no delay slot in between them
 			// word1:|AA|BB|CC|DD|
 			//       |--|--|--|--|			
 			// word2:|AD|AB|EE|FF|
