@@ -127,7 +127,7 @@ void mips::CPU::executeDelayedLoad()
 	if (m_context->isDebug())
 	{
 		Register<uint32_t> rt = Register<uint32_t>(load.registerIdx, m_registerFile[load.registerIdx]);
-		m_context->getDebugger()->logDelayedLoad(rt, load.sign, load.size);
+		m_context->getDebugger()->logDelayedLoadOp(rt, load.sign, load.size);
 	}
 
 	m_delayLoads.pop();

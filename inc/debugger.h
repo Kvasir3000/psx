@@ -52,16 +52,12 @@ namespace psx
 		};
 
 		template<typename Value>
-		void logDecodedValue(const Value& value, bool decimal, bool lastValue, bool printAddress = false) const
+		void logDecodedValue(const Value& value, bool decimal, bool lastValue) const
 		{
 			OUTPUT_STREAM << std::hex << "0x";
+		
 			
-			if (printAddress)
-			{
-				OUTPUT_STREAM << SET_ADDRES_STYLE;
-			}
-			
-			OUTPUT_STREAM << value;
+			OUTPUT_STREAM << SET_ADDRES_STYLE << value;
 
 			if (decimal)
 			{
@@ -89,7 +85,7 @@ namespace psx
 		}
 
 		template<typename hi_type, typename lo_type, typename ...Operands>
-		void logRegisterMultiplicativeArithmetic(const std::string& mnemonic, const hi_type& hi, 
+		void logHiLoArithmeticOp(const std::string& mnemonic, const hi_type& hi, 
 			                                     const lo_type& lo, Operands... ops) const
 		{
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... }; 
@@ -101,7 +97,7 @@ namespace psx
 		}
 
 		template<typename ... Operands>
-		void logMemoryOperation(const std::string& mnemonic, Operands ... ops) const
+		void logMemoryOp(const std::string& mnemonic, Operands ... ops) const
 		{
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... };
 			std::array<uint32_t, sizeof...(ops)>    values = { ops.value...};
@@ -111,7 +107,7 @@ namespace psx
 		}
 
 		template<typename ...Operands>
-		void logBranch(const std::string& mnemonic, bool ignoreBranch, uint32_t targetAddress, Operands... ops)
+		void logBranchOp(const std::string& mnemonic, bool ignoreBranch, uint32_t targetAddress, Operands... ops)
 		{
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... }; 
 			logDecodedAssembly(mnemonic, operands);
@@ -125,13 +121,13 @@ namespace psx
 			else
 			{
 				OUTPUT_STREAM << "                Branch to ";
-				logDecodedValue(targetAddress, false, true, true);
+				logDecodedValue(targetAddress, false, true);
 				OUTPUT_STREAM << "\n";
 			}
 		}
 
 		template<typename Operand>
-		void logDelayedLoad(Operand rt, bool sign, cpu_constants::LoadSize loadSize)
+		void logDelayedLoadOp(Operand rt, bool sign, cpu_constants::LoadSize loadSize)
 		{
 			OUTPUT_STREAM << "Executing delayed load -> " << std::dec << rt.name << " = ";
 
@@ -141,15 +137,15 @@ namespace psx
 			}
 			else if (loadSize == cpu_constants::LoadSize::Byte)
 			{
-				logDecodedValue(static_cast<int32_t>(static_cast<int8_t>(rt.value)), true, true, true);
+				logDecodedValue(static_cast<int32_t>(static_cast<int8_t>(rt.value)), true, true);
 			}
 			else if (loadSize == cpu_constants::LoadSize::Halfword)
 			{
-				logDecodedValue(static_cast<int32_t>(static_cast<int16_t>(rt.value)), true, true, true);
+				logDecodedValue(static_cast<int32_t>(static_cast<int16_t>(rt.value)), true, true);
 			}
 			else if (loadSize == cpu_constants::LoadSize::Word)
 			{
-				logDecodedValue(static_cast<int32_t>(rt.value), true, true, true);
+				logDecodedValue(static_cast<int32_t>(rt.value), true, true);
 			}
 			OUTPUT_STREAM << "\n";
 		}

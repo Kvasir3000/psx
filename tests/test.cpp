@@ -8,7 +8,7 @@ namespace testing
 
 	}
 
-	void Test::addRTBaseOffsetOp(uint32_t opcode, uint32_t rt, uint32_t base, int16_t offset)
+	void Test::addRtBaseOffsetOp(uint32_t opcode, uint32_t rt, uint32_t base, int16_t offset)
 	{
 		InstructionDescriptor instruction = { 0 };
 		instruction.primaryOpcode = opcode;
@@ -18,12 +18,60 @@ namespace testing
 		addInstruction(instruction);
 	}
 
-	void Test::addRSRTOp(uint32_t opcode, uint32_t rs, uint32_t rt)
+	void Test::addRsRtOp(uint32_t opcode, uint32_t rs, uint32_t rt)
 	{
 		InstructionDescriptor instruction = { 0 };
 		instruction.secondaryOpcode = opcode;
 		instruction.rs = rs;
 		instruction.rt = rt;
+		addInstruction(instruction);
+	}
+
+	void Test::addRsOp(uint32_t opcode, uint32_t rs)
+	{
+		InstructionDescriptor instruction = { 0 };
+		instruction.secondaryOpcode = opcode;
+		instruction.rs = rs;
+		addInstruction(instruction);
+	}
+
+	void Test::addRsRtImmOp(uint32_t opcode, uint32_t rt, uint32_t rs, int16_t immediate)
+	{
+		InstructionDescriptor instruction = { 0 };
+		instruction.primaryOpcode = opcode;
+		instruction.rt = rt;
+		instruction.rs = rs;
+		instruction.immediate = immediate;
+		addInstruction(instruction);
+	}
+
+	void Test::addRdRSRtOp(uint32_t opcode, uint32_t rd, uint32_t rs, uint32_t rt)
+	{
+		InstructionDescriptor instruction = { 0 };
+		instruction.secondaryOpcode = opcode;
+		instruction.rd = rd;
+		instruction.rs = rs;
+		instruction.rt = rt;
+		addInstruction(instruction);
+	}	
+	
+	void Test::addRdRtSaOp(uint32_t opcode, uint32_t rd, uint32_t rt, uint32_t sa)
+	{
+		InstructionDescriptor instruction = { 0 };
+		instruction.secondaryOpcode = opcode;
+		instruction.rd = rd;
+		instruction.rt = rt;
+		instruction.sa = sa;
+		addInstruction(instruction);
+	}
+
+	void Test::addRdRtRsOp(uint32_t opcode, uint32_t rd, uint32_t rt, uint32_t rs)
+	{
+		InstructionDescriptor instruction = { 0 };
+		instruction.secondaryOpcode = opcode;
+		instruction.rd = rd;
+		instruction.rt = rt;
+		instruction.rs = rs;
 		addInstruction(instruction);
 	}
 
@@ -182,34 +230,39 @@ namespace testing
 		addInstruction(instruction);
 	}
 
-	void Test::mlt(uint32_t rs, uint32_t rt)
+	void Test::mult(uint32_t rs, uint32_t rt)
 	{
-		addRSRTOp(MULT, rs, rt);
+		addRsRtOp(MULT, rs, rt);
 	}
 
-	void Test::mltu(uint32_t rs, uint32_t rt)
+	void Test::multu(uint32_t rs, uint32_t rt)
 	{
-		addRSRTOp(MULTU, rs, rt);
+		addRsRtOp(MULTU, rs, rt);
 	}
 
 	void Test::nor(uint32_t rd, uint32_t rs, uint32_t rt)
 	{
+		addRdRSRtOp(NOR, rd, rs, rt);
+	}
+	
+	void Test::and_(uint32_t rd, uint32_t rs, uint32_t rt)
+	{
+		addRdRSRtOp(AND, rd, rs, rt);
+	}
+
+	void Test::andi(uint32_t rt, uint32_t rs, uint16_t immediate)
+	{
 		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = NOR;
-		instruction.rd = rd;
-		instruction.rs = rs;
+		instruction.primaryOpcode = ANDI;
 		instruction.rt = rt;
+		instruction.rs = rs;
+		instruction.immediate = immediate;
 		addInstruction(instruction);
 	}
 
 	void Test::or_(uint32_t rd, uint32_t rs, uint32_t rt)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = OR;
-		instruction.rd = rd;
-		instruction.rs = rs;
-		instruction.rt = rt;
-		addInstruction(instruction);
+		addRdRSRtOp(OR, rd, rs, rt);
 	}
 
 	void Test::ori(uint32_t rt, uint32_t rs, uint16_t immediate)
@@ -224,123 +277,148 @@ namespace testing
 
 	void Test::addi(uint32_t rt, uint32_t rs, int16_t immediate)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.primaryOpcode = ADDI;
-		instruction.rt = rt;
-		instruction.rs = rs;
-		instruction.immediate = immediate;
-		addInstruction(instruction);
+		addRsRtImmOp(ADDI, rt, rs, immediate);
+	}	
+	
+	void Test::addiu(uint32_t rt, uint32_t rs, int16_t immediate)
+	{
+		addRsRtImmOp(ADDIU, rt, rs, immediate);
 	}
 
 	void Test::div(uint32_t rs, uint32_t rt)
 	{
-		addRSRTOp(DIV, rs, rt);
+	
+		addRsRtOp(DIV, rs, rt);
+	}
+
+	void Test::divu(uint32_t rs, uint32_t rt)
+	{
+		addRsRtOp(DIVU, rs, rt);
 	}
 
 	void Test::add(int32_t rd, uint32_t rs, uint32_t rt)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = ADD;
-		instruction.rt = rt;
-		instruction.rs = rs;
-		instruction.rd = rd;
-		addInstruction(instruction);
-	}
-
-	void Test::sb(uint32_t base, uint32_t rt, uint16_t offset)
+		addRdRSRtOp(ADD, rd, rs, rt);
+	}	
+	
+	void Test::addu(int32_t rd, uint32_t rs, uint32_t rt)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.primaryOpcode = SB;
-		instruction.base = base;
-		instruction.rt = rt;
-		instruction.offset = offset;
-		addInstruction(instruction);
+		addRdRSRtOp(ADDU, rd, rs, rt);
 	}
 
-	void Test::sh(uint32_t base, uint32_t rt, uint16_t offset)
+	void Test::sub(int32_t rd, uint32_t rs, uint32_t rt)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.primaryOpcode = SH;
-		instruction.base = base;
-		instruction.rt = rt;
-		instruction.offset = offset;
-		addInstruction(instruction);
+		addRdRSRtOp(SUB , rd, rs, rt);
 	}
 
+	void Test::subu(int32_t rd, uint32_t rs, uint32_t rt)
+	{
+		addRdRSRtOp(SUBU, rd, rs, rt);
+	}
+
+	void Test::sb(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRtBaseOffsetOp(SB, rt, base, offset);
+	}
+
+	void Test::sh(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRtBaseOffsetOp(SH, rt, base, offset);
+	}
 
 	void Test::lb(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LB, rt, base, offset);
+		addRtBaseOffsetOp(LB, rt, base, offset);
 	}
 
 	void Test::lbu(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LBU, rt, base, offset);
+		addRtBaseOffsetOp(LBU, rt, base, offset);
 	}
 	
 	void Test::lh(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LH, rt, base, offset);
+		addRtBaseOffsetOp(LH, rt, base, offset);
 	}
 		
 	void Test::lhu(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LHU, rt, base, offset);
+		addRtBaseOffsetOp(LHU, rt, base, offset);
 	}
 
 	void Test::lui(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LUI, rt, base, offset);
+		addRtBaseOffsetOp(LUI, rt, base, offset);
 	}
 
 	void Test::lw(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LW, rt, base, offset);
+		addRtBaseOffsetOp(LW, rt, base, offset);
 	}
 	
 	void Test::lwl(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LWL, rt, base, offset);
+		addRtBaseOffsetOp(LWL, rt, base, offset);
 	}
 
 	void Test::lwr(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LWR, rt, base, offset);
+		addRtBaseOffsetOp(LWR, rt, base, offset);
 	}
 	
 	void Test::lwc2(uint32_t rt, uint32_t base, int16_t offset)
 	{
-		addRTBaseOffsetOp(LWC2, rt, base, offset);
+		addRtBaseOffsetOp(LWC2, rt, base, offset);
 	}
 
 	void Test::sll(uint32_t rd, uint32_t rt, uint32_t sa)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = SLL;
-		instruction.rd = rd;
-		instruction.rt = rt;
-		instruction.sa = sa;
-		addInstruction(instruction);
+		addRdRtSaOp(SLL, rd, rt, sa);
+	}	
+	
+	void Test::sra(uint32_t rd, uint32_t rt, uint32_t sa)
+	{
+		addRdRtSaOp(SRA, rd, rt, sa);
+	}
+
+	void Test::srav(uint32_t rd, uint32_t rt, uint32_t rs)
+	{
+		addRdRtRsOp(SRAV, rd, rt, rs);
+	}
+
+	void Test::srl(uint32_t rd, uint32_t rt, uint32_t sa)
+	{
+		addRdRtSaOp(SRL, rd, rt, sa);
+	}
+
+	void Test::srlv(uint32_t rd, uint32_t rt, uint32_t rs)
+	{
+		addRdRtRsOp(SRLV, rd, rt, rs);
 	}
 
 	void Test::sllv(uint32_t rd, uint32_t rt, uint32_t rs)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = SLLV;
-		instruction.rd = rd;
-		instruction.rt = rt;
-		instruction.rs = rs;
-		addInstruction(instruction);
+		addRdRtRsOp(SLLV, rd, rt, rs);
 	}
 
 	void Test::slt(uint32_t rd, uint32_t rs, uint32_t rt)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = SLT;
-		instruction.rd = rd;
-		instruction.rs = rs;
-		instruction.rt = rt;
-		addInstruction(instruction);
+		addRdRSRtOp(SLT, rd, rs, rt);
+	}
+
+	void Test::sltu(uint32_t rd, uint32_t rs, uint32_t rt)
+	{
+		addRdRSRtOp(SLTU, rd, rs, rt);
+	}
+
+	void Test::slti(uint32_t rt, uint32_t rs, int16_t immediate)
+	{
+		addRsRtImmOp(SLTI, rt, rs, immediate);
+	}	
+	
+	void Test::sltiu(uint32_t rt, uint32_t rs, int16_t immediate)
+	{
+		addRsRtImmOp(SLTIU, rt, rs, immediate);
 	}
 
 	void Test::mfc(uint32_t rt, uint32_t rd, uint32_t copIdx)
@@ -387,18 +465,13 @@ namespace testing
 
 	void Test::mthi(uint32_t rs)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = MTHI;
-		instruction.rs = rs;
-		addInstruction(instruction);
+		addRsOp(MTHI, rs);
 	};
 
 	void Test::mtlo(uint32_t rs)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = MTLO;
-		instruction.rs = rs;
-		addInstruction(instruction);
+		addRsOp(MTLO, rs);
+
 	};
 
 	void Test::mfhi(uint32_t rd)
@@ -703,9 +776,6 @@ namespace testing
 	
 	void Test::jr(uint32_t rs)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.secondaryOpcode = JR;
-		instruction.rs = rs;
-		addInstruction(instruction);
+		addRsOp(JR, rs);
 	}
 }

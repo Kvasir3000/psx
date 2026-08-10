@@ -13,7 +13,7 @@ namespace testing
 class Test
 {
 private: 
-	static constexpr uint32_t				   MEMORY_SIZE = 1000;
+	static constexpr uint32_t				   MEMORY_SIZE = 750;
 	std::string								   m_name; 
 	std::unordered_map<std::string, uint32_t>  m_labelAddrMap;
 
@@ -26,8 +26,14 @@ private:
 	};
 	std::unordered_map<uint32_t, RelocationEntry>  m_primaryRelocationEntries;
 	std::unordered_map<uint32_t, RelocationEntry>  m_regimmRelocationEntries;
-	void addRTBaseOffsetOp(uint32_t opcode, uint32_t rt, uint32_t base, int16_t offset);
-	void addRSRTOp(uint32_t opcode, uint32_t rs, uint32_t rt);
+	void addRtBaseOffsetOp(uint32_t opcode, uint32_t rt, uint32_t base, int16_t offset);
+	void addRsRtOp(uint32_t opcode, uint32_t rs, uint32_t rt);
+	void addRsOp(uint32_t opcode, uint32_t rs);
+	void addRsRtImmOp(uint32_t opcode, uint32_t rt, uint32_t rs, int16_t immediate);
+	void addRdRSRtOp(uint32_t opcode, uint32_t rd, uint32_t rs, uint32_t rt);
+	void addRdRtSaOp(uint32_t opcode, uint32_t rd, uint32_t rt, uint32_t sa);
+	void addRdRtRsOp(uint32_t opcode, uint32_t rd, uint32_t rt, uint32_t rs);
+
 public:
 	Test(std::string name);
 
@@ -70,16 +76,23 @@ public:
 	void endProgram();
 
 	void initRegister(uint32_t regiseterIdx, uint32_t value);
-	void mlt(uint32_t rs, uint32_t rt);
-	void mltu(uint32_t rs, uint32_t rt);
+	void mult(uint32_t rs, uint32_t rt);
+	void multu(uint32_t rs, uint32_t rt);
 	void nor(uint32_t rd, uint32_t rs, uint32_t rt);
+	void and_(uint32_t rd, uint32_t rs, uint32_t rt);
+	void andi(uint32_t rt, uint32_t rs, uint16_t immediate);
 	void or_ (uint32_t rd, uint32_t rs, uint32_t rt);
 	void ori(uint32_t rt, uint32_t rs, uint16_t immediate);
 	void addi(uint32_t rt, uint32_t rs, int16_t immediate);
+	void addiu(uint32_t rt, uint32_t rs, int16_t immediate);
 	void div(uint32_t rs, uint32_t rt);
+	void divu(uint32_t rs, uint32_t rt);
 	void add(int32_t rd, uint32_t rs, uint32_t rt);
-	void sb(uint32_t base, uint32_t rt, uint16_t offset);
-	void sh(uint32_t base, uint32_t rt, uint16_t offset);
+	void addu(int32_t rd, uint32_t rs, uint32_t rt);
+	void sub(int32_t rd, uint32_t rs, uint32_t rt);
+	void subu(int32_t rd, uint32_t rs, uint32_t rt);
+	void sb(uint32_t rt, uint32_t base, int16_t offset);
+	void sh(uint32_t rt, uint32_t base, int16_t offset);
 	void lb(uint32_t rt, uint32_t base, int16_t offset);
 	void lbu(uint32_t rt, uint32_t base, int16_t offset);
 	void lh(uint32_t rt, uint32_t base, int16_t offset);
@@ -90,8 +103,15 @@ public:
 	void lwr(uint32_t rt, uint32_t base, int16_t offset);
 	void lwc2(uint32_t rt, uint32_t base, int16_t offset);
 	void sll(uint32_t rd, uint32_t rt, uint32_t sa);
+	void sra(uint32_t rd, uint32_t rt, uint32_t sa);
+	void srav(uint32_t rd, uint32_t rt, uint32_t rs);
+	void srl(uint32_t rd, uint32_t rt, uint32_t sa);
+	void srlv(uint32_t rd, uint32_t rt, uint32_t rs);
 	void sllv(uint32_t rd, uint32_t rt, uint32_t rs);
 	void slt(uint32_t rd, uint32_t rs, uint32_t rt);
+	void sltu(uint32_t rd, uint32_t rs, uint32_t rt);
+	void slti(uint32_t rt, uint32_t rs, int16_t immediate);
+	void sltiu(uint32_t rt, uint32_t rs, int16_t immediate);
 	void mfc(uint32_t rt, uint32_t rd, uint32_t copIdx);
 	void mfc0(uint32_t rt, uint32_t rd);
 	void mfc2(uint32_t rt, uint32_t rd);
@@ -126,5 +146,7 @@ public:
 	void jal(const std::string& procedureName);
 	void jalr(uint32_t rs, uint32_t rd);
 	void jr(uint32_t rs);
+
+	//	slti
 };
 }

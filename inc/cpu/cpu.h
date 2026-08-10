@@ -88,21 +88,16 @@ namespace mips
 		COP0 m_cop0;
 		std::array<COP*, 2> m_copMap = { (COP*)&m_cop0, (COP*)& m_gte };
 
-
-		struct ArithmeticOpFlags
-		{
-			bool catchException;
-			bool isMultiplicative;
-		};
-
 		template<typename Type, typename ArithmeticOp>
-		void executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, const ArithmeticOpFlags& opFlags);
+		void executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, bool catchException);
+		template<typename Type, typename HiLoArithmeticOp>
+		void executeHiLoArithmeticOp(const std::string& mnemonic, const HiLoArithmeticOp& arithmeticOp);
 		template<typename Type, typename ArithmeticOp>
 		void executeImmediateArithmeticOp(const std::string&  mnemonic, const ArithmeticOp& arithmeticOp, bool catchException);
 		template<typename BranchZeroOp>
 		void executeBranchZeroOp(const std::string& mnemonic, const BranchZeroOp& branchCondition);
 		template<typename BranchOp>
-		void executeBranchOp(const std::string& mnemonic, const BranchOp& branchCondition, bool compareToZero);
+		void executeBranchOp(const std::string& mnemonic, const BranchOp& branchCondition);
 		void executeJumpOp(const std::string& mnemonic);
 		void excecuteJumpRegisterOp(const std::string& mnemonic);
 		template <typename Type, typename LoadOp>
@@ -116,7 +111,7 @@ namespace mips
 		template<typename StoreOp>
 		void executeStoreOp(const std::string& mnemonic, const StoreOp& storeOp);
 		template<typename SourceValue, typename ShiftValue>
-		void executeShiftOp(const std::string& mnemonic, const SourceValue& source, const ShiftValue& shift);
+		void executeShiftOp(const std::string& mnemonic, const SourceValue& source, const ShiftValue& shift, bool leftShift);
 		template<typename Type, typename SetOp>
 		void executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp);
 		template<typename Type, typename SetOp>
@@ -164,7 +159,7 @@ namespace mips
 		void mult();
 		void multu();
 		void nor();
-		void _or();
+		void or_();
 		void ori();
 		void sb();
 		void sh();
@@ -172,5 +167,13 @@ namespace mips
 		void sllv();
 		void slt();
 		void slti();
+		void sltiu();
+		void sltu();
+		void sra();
+		void srav();
+		void srl();
+		void srlv();
+		void sub();
+		void subu();
 	};
 }

@@ -31,6 +31,8 @@ void mips::CPU::fillPrimaryOpcodeTable()
 	m_primaryOpcodeTable[ORI]   = std::bind(&CPU::ori,   this);
 	m_primaryOpcodeTable[SB]    = std::bind(&CPU::sb,    this);
 	m_primaryOpcodeTable[SH]    = std::bind(&CPU::sh,    this);
+	m_primaryOpcodeTable[SLTI]  = std::bind(&CPU::slti,  this);
+	m_primaryOpcodeTable[SLTIU] = std::bind(&CPU::sltiu, this);
 }
 
 void mips::CPU::fillSecondaryOpcodeTable()
@@ -50,10 +52,17 @@ void mips::CPU::fillSecondaryOpcodeTable()
 	m_secondaryOpcodeTable[MULT]  = std::bind(&CPU::mult,   this);
 	m_secondaryOpcodeTable[MULTU] = std::bind(&CPU::multu,  this);
 	m_secondaryOpcodeTable[NOR]   = std::bind(&CPU::nor,    this);
-	m_secondaryOpcodeTable[OR]    = std::bind(&CPU::_or,     this);
+	m_secondaryOpcodeTable[OR]    = std::bind(&CPU::or_,    this);
 	m_secondaryOpcodeTable[SLL]   = std::bind(&CPU::sll,    this);
 	m_secondaryOpcodeTable[SLLV]  = std::bind(&CPU::sllv,   this);
 	m_secondaryOpcodeTable[SLT]   = std::bind(&CPU::slt,    this);
+	m_secondaryOpcodeTable[SLTU]  = std::bind(&CPU::sltu,   this);
+	m_secondaryOpcodeTable[SRA]   = std::bind(&CPU::sra,    this);
+	m_secondaryOpcodeTable[SRAV]  = std::bind(&CPU::srav,   this);
+	m_secondaryOpcodeTable[SRL]   = std::bind(&CPU::srl,    this);
+	m_secondaryOpcodeTable[SRLV]  = std::bind(&CPU::srlv,   this);
+	m_secondaryOpcodeTable[SUB ]  = std::bind(&CPU::sub,    this);
+	m_secondaryOpcodeTable[SUBU]  = std::bind(&CPU::subu,   this);
 }
 
 void mips::CPU::fillREGIMMOpcodeTable()
@@ -74,44 +83,47 @@ void mips::CPU::fillCOPOpcodeTable()
 }
 
 template <typename Type, typename ArithmeticOp>
-void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, const ArithmeticOpFlags& opFlags)
+void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, bool catchException)
 {
 	uint32_t rdIdx = m_instruction.getRD();
 	uint32_t rsIdx = m_instruction.getRS();
 	uint32_t rtIdx = m_instruction.getRT();
 
-	Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
 	Register<Type> rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
 	Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
 
-
 	Type result = arithmeticOp(rs.value, rt.value);
+	m_registerFile[rdIdx] = static_cast<uint32_t>(result); // ?
 
 	
 	if (m_context->isDebug())
 	{
-		if (!opFlags.isMultiplicative)
-		{
-			rd.set_value(result);
-			m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
-		}
-		else
-		{
-			m_context->getDebugger()->logRegisterMultiplicativeArithmetic(mnemonic, (Type)m_hi, (Type)m_lo, rs, rt);
-		}
+		Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);		
 	}
 
-	if (opFlags.catchException && checkOverflow(rs.value, rt.value, result))
+	if (catchException && checkOverflow(rs.value, rt.value, result))
 	{
 		raiseException("Integer overflow");
 	}
-
-	if (!opFlags.isMultiplicative) // In case of mul/div results are stored from lambda function
-	{
-		m_registerFile[rdIdx] = static_cast<uint32_t>(result);
-	}
 }
 
+template<typename Type, typename HiLoArithmeticOp>
+void mips::CPU::executeHiLoArithmeticOp(const std::string& mnemonic, const HiLoArithmeticOp& arithmeticOp)
+{
+	uint32_t rsIdx = m_instruction.getRS();
+	uint32_t rtIdx = m_instruction.getRT();
+
+	Register<Type> rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
+	Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
+
+	arithmeticOp(rs.value, rt.value);
+
+	if (m_context->isDebug())
+	{
+		m_context->getDebugger()->logHiLoArithmeticOp(mnemonic, (Type)m_hi, (Type)m_lo, rs, rt);
+	}
+}
 
 template<typename Type, typename ArithmeticOp>
 void mips::CPU::executeImmediateArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, bool catchException)
@@ -155,12 +167,12 @@ void mips::CPU::executeBranchZeroOp(const std::string& mnemonic, const BranchZer
 	if (m_context->isDebug())
 	{
 		bool ignoreBranch = m_delaySlot.status != cpu_constants::DelaySlotState::Pending;
-		m_context->getDebugger()->logBranch(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, offset);
+		m_context->getDebugger()->logBranchOp(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, offset);
 	}
 };
 
 template<typename BranchOp>
-void mips::CPU::executeBranchOp(const std::string& mnemonic, const BranchOp& branchCondition, bool compareToZero)
+void mips::CPU::executeBranchOp(const std::string& mnemonic, const BranchOp& branchCondition)
 {
 	uint32_t			rsIdx = m_instruction.getRS();
 	uint32_t			rtIdx = m_instruction.getRT();
@@ -177,7 +189,7 @@ void mips::CPU::executeBranchOp(const std::string& mnemonic, const BranchOp& bra
 	if (m_context->isDebug())
 	{
 		bool ignoreBranch = m_delaySlot.status != cpu_constants::DelaySlotState::Pending;
-		m_context->getDebugger()->logBranch(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, rt, offset);
+		m_context->getDebugger()->logBranchOp(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, rt, offset);
 	}
 }
 
@@ -188,7 +200,7 @@ void mips::CPU::executeJumpOp(const std::string& mnemonic)
 	m_delaySlot.targetAddr = ((m_pc + cpu_constants::WORD_SIZE_BYTES) & cpu_constants::PC_HIGH_BITS_MASK) | (target << 2);
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logBranch(mnemonic, false, m_delaySlot.targetAddr, Immediate<uint32_t>(target));
+		m_context->getDebugger()->logBranchOp(mnemonic, false, m_delaySlot.targetAddr, Immediate<uint32_t>(target));
 	}
 }
 
@@ -235,7 +247,7 @@ void mips::CPU::executeLoadOp(const std::string& mnemonic, const LoadOp& loadOp)
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logMemoryOperation(mnemonic, rt, offset, base);
+		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
 	}
 
 	if (isAligned(addr, load.size))
@@ -266,7 +278,7 @@ void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const AdjustWor
 	{
 		Register<uint32_t> base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
 		Register<uint32_t> rt   = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
-		m_context->getDebugger()->logMemoryOperation(mnemonic, rt, offset, base);
+		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
 	}
 
 	DelayLoad load;
@@ -330,18 +342,18 @@ void mips::CPU::executeStoreOp(const std::string& mnemonic, const StoreOp& store
 	
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logMemoryOperation(mnemonic, rt, offset, base);
+		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
 	}
 
 	raiseException("Store exceptions are not implemented yet"); 
 }
 
 template<typename SourceValue, typename ShiftValue>
-void mips::CPU::executeShiftOp(const std::string& mnemonic, const SourceValue& source, const ShiftValue& shift)
+void mips::CPU::executeShiftOp(const std::string& mnemonic, const SourceValue& source, const ShiftValue& shift, bool leftShift)
 {
 	uint32_t rdIdx = m_instruction.getRD();
 
-	m_registerFile[rdIdx] = source.value << shift.value;
+	m_registerFile[rdIdx] = leftShift? source.value << shift.value : source.value >> shift.value;
 
 	if (m_context->isDebug())
 	{
@@ -360,13 +372,12 @@ void mips::CPU::executeRegisterSetOnOp(const std::string& mnemonic, const SetOp&
 
 	Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
 	Register<Type> rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
-	Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
 
 	m_registerFile[rdIdx] = setOp(rt.value, rs.value);
 
 	if (m_context->isDebug())
 	{
-		rd.set_value(m_registerFile[rdIdx]);
+		Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
 		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
 	}
 }
@@ -376,26 +387,23 @@ void mips::CPU::executeImmediateSetOnOp(const std::string& mnemonic, const SetOp
 {
 	uint32_t rtIdx = m_instruction.getRT();
 	uint32_t rsIdx = m_instruction.getRS();
-	uint32_t rdIdx = m_instruction.getRD();
 
-	Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
-	Register<Type> rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
-	Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
+	Immediate<Type> immediate = Immediate<Type>(m_instruction.getImmediate());
+	Register<Type>     rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
 
-	m_registerFile[rdIdx] = setOp(rt.value, rs.value);
+	m_registerFile[rtIdx] = setOp(rs.value, immediate.value);
 
 	if (m_context->isDebug())
 	{
-		rd.set_value(m_registerFile[rdIdx]);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
+		Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
+		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rs, immediate);
 	}
 }
 
 void mips::CPU::add()
 {
 	auto addOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 + operand2; };
-	ArithmeticOpFlags opFlags = { true, false };
-	executeRegisterArithmeticOp<int32_t>("add", addOp, opFlags);
+	executeRegisterArithmeticOp<int32_t>("add", addOp, true);
 } 
 
 void mips::CPU::addi()
@@ -413,15 +421,13 @@ void mips::CPU::addiu()
 void mips::CPU::addu()
 {
 	auto addOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 + operand2; };
-	ArithmeticOpFlags opFlags = { false, false };
-	executeRegisterArithmeticOp<uint32_t>("addu", addOp, opFlags);
+	executeRegisterArithmeticOp<uint32_t>("addu", addOp, false);
 }
 
 void mips::CPU::and_()
 {
 	auto andOp = [](uint32_t operand1, uint32_t operand2)->int32_t { return operand1 & operand2; };
-	ArithmeticOpFlags opFlags = { false, false };
-	executeRegisterArithmeticOp<uint32_t>("and", andOp, opFlags);
+	executeRegisterArithmeticOp<uint32_t>("and", andOp, false);
 }
 
 void mips::CPU::andi()
@@ -433,7 +439,7 @@ void mips::CPU::andi()
 void mips::CPU::beq()
 {
 	auto equals = [](int32_t operand1, int32_t operand2)->bool { return operand1 == operand2; };
-	executeBranchOp("beq", equals, false);
+	executeBranchOp("beq", equals);
 }
 
 void mips::CPU::bgez()
@@ -477,7 +483,7 @@ void mips::CPU::bltzal()
 void mips::CPU::bne()
 {
 	auto notEqual = [](uint32_t operand1, uint32_t operand2)->bool { return operand1 != operand2; };
-	executeBranchOp("bne", notEqual, false);
+	executeBranchOp("bne", notEqual);
 }
 
 void mips::CPU::break_()
@@ -520,8 +526,7 @@ void mips::CPU::div()
 			}
 			return 0;
 	};
-	ArithmeticOpFlags opFlags = { false, true };
-	executeRegisterArithmeticOp<int32_t>("div", divideOp, opFlags);
+	executeHiLoArithmeticOp<int32_t>("div", divideOp);
 }
 
 void mips::CPU::divu()
@@ -539,8 +544,7 @@ void mips::CPU::divu()
 			}
 			return 0;
 	};
-	ArithmeticOpFlags opFlags = { false, true };
-	executeRegisterArithmeticOp<uint32_t>("divu", divideOp, opFlags);
+	executeHiLoArithmeticOp<uint32_t>("divu", divideOp);
 }
 
 void mips::CPU::j()
@@ -630,7 +634,7 @@ void mips::CPU::lwc2()
 	if (m_context->isDebug())
 	{	
 		COPRegister	rt = COPRegister(2, rtIdx, m_gte.readDataRegister(rtIdx));
-		m_context->getDebugger()->logMemoryOperation("lwc2", rt, base, offset);
+		m_context->getDebugger()->logMemoryOp("lwc2", rt, base, offset);
 	}
 	
 	raiseException("Coprocessor unusable bit is not implemented yet");
@@ -713,8 +717,7 @@ void mips::CPU::mult()
 
 		 return 0;
 	};
-	ArithmeticOpFlags opFlags = { false, true };
-	executeRegisterArithmeticOp<int32_t>("mult", multiplyOp, opFlags);
+	executeHiLoArithmeticOp<int32_t>("mult", multiplyOp);
 }
 
 void mips::CPU::multu()
@@ -727,22 +730,19 @@ void mips::CPU::multu()
 
 		return 0;
 	};
-	ArithmeticOpFlags opFlags = { false, true };
-	executeRegisterArithmeticOp<uint32_t>("multu", multiplyOp, opFlags);
+	executeHiLoArithmeticOp<uint32_t>("multu", multiplyOp);
 }
 
 void mips::CPU::nor()
 {
 	auto norOp = [](uint32_t operand1, uint32_t operand2)->uint32_t { return ~(operand1 | operand2); };
-	ArithmeticOpFlags opFlags = { false, false };
-	executeRegisterArithmeticOp<uint32_t>("nor", norOp, opFlags);
+	executeRegisterArithmeticOp<uint32_t>("nor", norOp, false);
 }
 
-void mips::CPU::_or()
+void mips::CPU::or_()
 {
 	auto orOp = [](uint32_t operand1, uint32_t operand2)->uint32_t { return operand1 | operand2; };
-	ArithmeticOpFlags opFlags = { false, false };
-	executeRegisterArithmeticOp<uint32_t>("or", orOp, opFlags);
+	executeRegisterArithmeticOp<uint32_t>("or", orOp, false);
 }
 
 void mips::CPU::ori()
@@ -766,9 +766,9 @@ void mips::CPU::sh()
 void mips::CPU::sll()
 {
 	uint32_t rtIdx = m_instruction.getRT();
-	Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+	Register<uint32_t>  rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
 	Immediate<uint32_t> sa = Immediate<uint32_t>(m_instruction.getSA());
-	executeShiftOp("sll", rt, sa);
+	executeShiftOp("sll", rt, sa, true);
 }
 
 void mips::CPU::sllv()
@@ -776,8 +776,8 @@ void mips::CPU::sllv()
 	uint32_t rtIdx = m_instruction.getRT();
 	uint32_t rsIdx = m_instruction.getRS();
 	Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
-	Register<uint32_t> rs = Register<uint32_t>(rsIdx, m_registerFile[rsIdx]);
-	executeShiftOp("sllv", rt, rs);
+	Register<uint32_t> rs = Register<uint32_t>(rsIdx, m_registerFile[rsIdx] & 0b11111);
+	executeShiftOp("sllv", rt, rs, true);
 }
 
 void mips::CPU::slt()
@@ -789,5 +789,63 @@ void mips::CPU::slt()
 void mips::CPU::slti()
 {
 	auto setOnLessThanImmOp = [](int32_t rs, int32_t immediate)->bool { return rs < immediate; };
-	executeRegisterSetOnOp<int32_t>("slti", setOnLessThanImmOp);
+	executeImmediateSetOnOp<int32_t>("slti", setOnLessThanImmOp);
+}
+
+void mips::CPU::sltiu()
+{
+	auto setOnLessThanImmOp = [](int32_t rs, int32_t immediate)->bool { return rs < immediate; };
+	executeImmediateSetOnOp<uint32_t>("sltiu", setOnLessThanImmOp);
+}
+
+void mips::CPU::sltu()
+{
+	auto setOnLessThanOp = [](int32_t rt, int32_t rs)->bool { return rs < rt;  };
+	executeRegisterSetOnOp<uint32_t>("sltu", setOnLessThanOp);
+}
+
+void mips::CPU::sra()
+{
+	uint32_t rtIdx = m_instruction.getRT();
+	Register<int32_t>   rt = Register<int32_t>(rtIdx, m_registerFile[rtIdx]);
+	Immediate<uint32_t> sa = Immediate<uint32_t>(m_instruction.getSA()); 
+	executeShiftOp("sra", rt, sa, false);
+}
+
+void mips::CPU::srav()
+{
+	uint32_t rtIdx = m_instruction.getRT();
+	uint32_t rsIdx = m_instruction.getRS();
+	Register<int32_t>  rt = Register<int32_t>(rtIdx, m_registerFile[rtIdx]);
+	Register<uint32_t> rs = Register<uint32_t>(rsIdx, m_registerFile[rsIdx] & 0b11111);
+	executeShiftOp("srav", rt, rs, false);
+}
+
+void mips::CPU::srl()
+{
+	uint32_t rtIdx = m_instruction.getRT();
+	Register<uint32_t>  rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+	Immediate<uint32_t> sa = Immediate<uint32_t>(m_instruction.getSA());
+	executeShiftOp("srl", rt, sa, false);
+}
+
+void mips::CPU::srlv()
+{
+	uint32_t rtIdx = m_instruction.getRT();
+	uint32_t rsIdx = m_instruction.getRS();
+	Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+	Register<uint32_t> rs = Register<uint32_t>(rsIdx, m_registerFile[rsIdx] & 0b11111);
+	executeShiftOp("srlv", rt, rs, false);
+}
+
+void mips::CPU::sub()
+{
+	auto subOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 - operand2; };
+	executeRegisterArithmeticOp<int32_t>("sub", subOp, true);
+}
+
+void mips::CPU::subu()
+{
+	auto subOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 - operand2; };
+	executeRegisterArithmeticOp<int32_t>("subu", subOp, false);
 }

@@ -11,17 +11,31 @@ namespace testing
 		TestStore() : Test("TEST_STORE")
 		{
 			initRegister(at, 0x1EEA);
-			sb(2, 1, 104);
-			lb(5, 2, 104);
+			sb(1, 2, 300);
+			lb(5, 2, 300);
 			nop();
 			addi(5, 5, -10);
-			sh(6, 1, 104);
-			lh(5, 2, 104);
+			sh(1, 6, 300);
+			lh(5, 2, 300);
 			nop();
 			addi(5, 5, -10);
 			sll(5, 5, 2);
 			initRegister(10, 5);
 			sllv(5, 5, 10);
+			initRegister(t5, -8);
+			sra(t6, t5, 1);
+			addi(t5, zero, 32);
+			sra(t6, t5, 1);
+			addi(a0, zero, 0b100000);
+			srav(t6, t5, a0);
+			sra(a0, a0, 5);
+			srav(t6, t5, a0);
+			addi(t0, zero, -10);
+			sra(t2, t0, 8);
+			srl(t2, t0, 8);
+			addi(t1, zero, 8);
+			srav(t2, t0, t1);
+			srlv(t2, t0, t1);
 			endProgram();
 		}
 	};
@@ -54,10 +68,18 @@ namespace testing
 	public:
 		TestSetOn() : Test("TEST_SET_ON")
 		{
-			initRegister(at, 2);
-			initRegister(v0, 3);
-			slt(v1, at, v0);
-			slt(v1, v0, at);
+			initRegister(t0, 2);
+			initRegister(t1, 3);
+			slt(t2, t0, t1);
+			slt(t2, t0, a1);
+			slti(t2, t1, 2);
+			slti(t2, t1, 4);
+			sltiu(t2, t1, -23);
+			addi(t1, zero, -45);
+			sltiu(t2, t1, -23);
+			addi(t0, zero, -34);
+			sltu(t2, t1, t0);
+			sltu(t2, t0, t1);
 			endProgram();
 		}
 	};
@@ -70,8 +92,8 @@ namespace testing
 		{
 			lw(v0, zero, 100);
 			initRegister(v1, v1);
-			mlt(v0, v1);
-			mltu(v0, v1);
+			mult(v0, v1);
+			multu(v0, v1);
 			initRegister(a1, 1);
 			initRegister(a2, 0);
 			nor(a3, a1, a2);
@@ -79,7 +101,20 @@ namespace testing
 			initRegister(t1, 1);
 			or_(t1, t1, t0);
 			ori(t1, t1, 0b1000);
+			lw(t0, zero, 100);
+			nop(); 
+			addiu(t0, t0, -4);
+			addu(t0, t1, t0);
+			and_(t0, t1, t0);
+			andi(t0, t0, 0b11001);
+			addi(t0, zero, 40);
+			addi(t1, zero, -5);
+			div(t0, t1);
+			divu(t0, t1);
+			sub(t2, t1, t0);
+			subu(t2, t0, t1);
 			endProgram();
+
 
 			// 2147483647
 			m_memory[100] = 0xFF;
@@ -248,7 +283,7 @@ namespace testing
 				{
 					beq(t0, t1, "return_beq");
 					nop();
-					mlt(t2, t3);   // var *= 2
+					mult(t2, t3);   // var *= 2
 					mflo(t2);
 					addi(t0, t0, 1); // i++
 					j("loop");
@@ -430,7 +465,7 @@ namespace testing
 			label("add_t0_t2");
 			{
 				add(t3, t0, t2);
-				mlt(t3, t3);
+				mult(t3, t3);
 				jr(ra);
 				nop();
 			}
