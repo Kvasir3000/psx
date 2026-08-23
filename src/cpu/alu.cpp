@@ -33,6 +33,7 @@ void mips::CPU::fillPrimaryOpcodeTable()
 	m_primaryOpcodeTable[SH]    = std::bind(&CPU::sh,    this);
 	m_primaryOpcodeTable[SLTI]  = std::bind(&CPU::slti,  this);
 	m_primaryOpcodeTable[SLTIU] = std::bind(&CPU::sltiu, this);
+	m_primaryOpcodeTable[SWC2]  = std::bind(&CPU::swc2,  this);
 }
 
 void mips::CPU::fillSecondaryOpcodeTable()
@@ -252,7 +253,7 @@ void mips::CPU::executeLoadOp(const std::string& mnemonic, const LoadOp& loadOp)
 
 	if (isAligned(addr, load.size))
 	{
-		m_context->getDebugger()->logWarning("Accessing unaligned memory:");
+		m_context->getDebugger()->logWarning("Accessed unaligned memory ^");;
 	}
 }
 
@@ -312,6 +313,35 @@ void mips::CPU::executeCopOp(const std::string& mnemonic, const CopOp& copOp)
 		COPRegister        rd = COPRegister(copIdx, rdIdx, m_copMap[copIdx]->readDataRegister(rdIdx));
 		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rd);
 	}
+	raiseException("Coprocessor unusable");
+}
+
+template<typename CopLoadStoreOp>
+void mips::CPU::executeCopLoadStoreOp(const std::string& mnemonic, const CopLoadStoreOp& copOp)
+{
+	uint32_t            rtIdx = m_instruction.getRT();
+	uint32_t            baseIdx = m_instruction.getBase();
+
+	Register<uint32_t>  base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
+	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
+
+	uint32_t addr = base.value + offset.value;
+
+	copOp(addr, rtIdx);
+
+	if (m_context->isDebug())
+	{
+		COPRegister	rt = COPRegister(2, rtIdx, m_gte.readDataRegister(rtIdx));
+		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
+	}
+
+
+	if (isAligned(addr, cpu_constants::LoadSize::Word))
+	{
+		m_context->getDebugger()->logWarning("Accessed unaligned memory ^");
+	}
+
+	raiseException("Coprocessor unusable bit is not implemented yet");
 	raiseException("Coprocessor unusable");
 }
 
@@ -570,25 +600,25 @@ void mips::CPU::jr()
 
 void mips::CPU::lb()
 {
-	auto loadByteOp = [this](uint32_t memoryAddr)->int8_t { return m_context->getBus()->readByte(memoryAddr); };
+	auto loadByteOp = [this](uint32_t addr)->int8_t { return m_context->getBus()->readByte(addr); };
 	executeLoadOp<int8_t>("lb", loadByteOp);
 }
 
 void mips::CPU::lbu()
 {
-	auto loadByteOp = [this](uint32_t memoryAddr)->uint8_t { return m_context->getBus()->readByte(memoryAddr); };
+	auto loadByteOp = [this](uint32_t addr)->uint8_t { return m_context->getBus()->readByte(addr); };
 	executeLoadOp<uint8_t>("lbu", loadByteOp);
 }
 
 void mips::CPU::lh()
 {
-	auto loadHalfwordOp = [this](uint32_t memoryAddr)->int16_t { return m_context->getBus()->readHalfword(memoryAddr); };
+	auto loadHalfwordOp = [this](uint32_t addr)->int16_t { return m_context->getBus()->readHalfword(addr); };
 	executeLoadOp<int16_t>("lh", loadHalfwordOp);
 };
 
 void mips::CPU::lhu()
 {
-	auto loadHalfwordOp = [this](uint32_t memoryAddr)->uint16_t { return m_context->getBus()->readHalfword(memoryAddr); };
+	auto loadHalfwordOp = [this](uint32_t addr)->uint16_t { return m_context->getBus()->readHalfword(addr); };
 	executeLoadOp<uint16_t>("lhu", loadHalfwordOp);
 }
 
@@ -608,37 +638,18 @@ void mips::CPU::lui()
 
 void mips::CPU::lw()
 {
-	auto loadWord = [this](uint32_t memoryAddr)->uint32_t { return m_context->getBus()->readWord(memoryAddr); };
+	auto loadWord = [this](uint32_t addr)->uint32_t { return m_context->getBus()->readWord(addr); };
 	executeLoadOp<uint32_t>("lw", loadWord);
 }
 
 void mips::CPU::lwc2()
 {
-	uint32_t            rtIdx = m_instruction.getRT();
-	uint32_t            baseIdx = m_instruction.getBase();
-
-	Register<uint32_t>  base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
-	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
-
-	uint32_t addr = base.value + offset.value;
-
-	if (isAligned(addr, cpu_constants::LoadSize::Word))
+	auto loadWordCop2 = [this](uint32_t addr, uint32_t rtIdx)->void 
 	{
-		m_context->getDebugger()->logWarning("Accessing unaligned memory:");
-	}
-
-	uint32_t word = m_context->getBus()->readWord(addr);
-	m_gte.writeDataRegister(rtIdx, word);
-
-
-	if (m_context->isDebug())
-	{	
-		COPRegister	rt = COPRegister(2, rtIdx, m_gte.readDataRegister(rtIdx));
-		m_context->getDebugger()->logMemoryOp("lwc2", rt, base, offset);
-	}
-	
-	raiseException("Coprocessor unusable bit is not implemented yet");
-	raiseException("Coprocessor unusable");
+		uint32_t word = m_context->getBus()->readWord(addr);
+		m_gte.writeDataRegister(rtIdx, word);
+	};
+	executeCopLoadStoreOp("lwc2", loadWordCop2);
 }
 
 void mips::CPU::lwl()
@@ -848,4 +859,14 @@ void mips::CPU::subu()
 {
 	auto subOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 - operand2; };
 	executeRegisterArithmeticOp<int32_t>("subu", subOp, false);
+}
+
+void mips::CPU::swc2()
+{
+	auto storeWordCop2 = [this](uint32_t addr, uint32_t rtIdx)->void
+	{
+		uint32_t word = m_gte.readDataRegister(rtIdx);
+		m_context->getBus()->storeWord(addr, word);
+	};
+	executeCopLoadStoreOp("swc2", storeWordCop2);
 }

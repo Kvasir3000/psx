@@ -18,35 +18,43 @@ void psx::BUS::loadTest(std::shared_ptr<testing::Test>& test)
 	memcpy(m_memory, testBin, MEMORY_SIZE);
 }
 
-uint8_t psx::BUS::readByte(uint32_t memoryAddress) 
+uint8_t psx::BUS::readByte(uint32_t addr) 
 { 
-	return m_memory[memoryAddress]; 
+	return m_memory[addr]; 
 };
 
-uint16_t psx::BUS::readHalfword(uint32_t memoryAddress)
+uint16_t psx::BUS::readHalfword(uint32_t addr)
 {	
-	return (m_memory[memoryAddress + 1] << 8) | m_memory[memoryAddress];
+	return (m_memory[addr + 1] << 8) | m_memory[addr];
 }
 
-uint32_t psx::BUS::readWord(uint32_t memoryAddress)
+uint32_t psx::BUS::readWord(uint32_t addr)
 {
 	uint32_t word = 0;
 
-	memcpy(&word, &m_memory[memoryAddress], cpu_constants::WORD_SIZE_BYTES);
+	memcpy(&word, &m_memory[addr], cpu_constants::WORD_SIZE_BYTES);
 
 	return word;
 }
 
-void psx::BUS::storeByte(uint32_t memoryAddress, uint8_t data)
+void psx::BUS::storeByte(uint32_t addr, uint8_t data)
 {
-	m_memory[memoryAddress] = data;
+	m_memory[addr] = data;
 }
 
 
-void psx::BUS::storeHalfword(uint32_t memoryAddress, uint16_t data)
+void psx::BUS::storeHalfword(uint32_t addr, uint16_t data)
 {
-	m_memory[memoryAddress] = (data >> cpu_constants::BYTE_SIZE_BITS) & cpu_constants::BYTE_MASK;
-	m_memory[memoryAddress + 1] = data & cpu_constants::BYTE_MASK;
+	m_memory[addr] = data & cpu_constants::BYTE_MASK;
+	m_memory[addr + 1] = (data >> cpu_constants::BYTE_SIZE_BITS);
+}
+
+void psx::BUS::storeWord(uint32_t addr, uint32_t data)
+{
+	m_memory[addr] = data & cpu_constants::BYTE_MASK;
+	m_memory[addr + 1] = (data >> cpu_constants::BYTE_SIZE_BITS) & cpu_constants::BYTE_MASK;
+	m_memory[addr + 2] = (data >> (cpu_constants::BYTE_SIZE_BITS * 2)) & cpu_constants::BYTE_MASK;
+	m_memory[addr + 3] = (data >> (cpu_constants::BYTE_SIZE_BITS * 3));
 }
 
 bool psx::BUS::isProgramEnd(uint32_t pc)

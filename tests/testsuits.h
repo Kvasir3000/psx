@@ -253,8 +253,13 @@ namespace testing
 		TestLoadCOP2() : Test("TEST_LOAD_COP2")
 		{
 			initRegister(a0, 20);
+			initRegister(a1, 0x200);
 			lwc2(12, a0, 100);
 			mfc2(t0, 12);
+			addi(t0, t0, -10);
+			swc2(12, a1, -3);
+			lw(t0, a1, -3);
+			nop();
 			addi(t0, t0, -10);
 			endProgram();
 
@@ -265,6 +270,8 @@ namespace testing
 			//// -23
 			m_memory[120] = 0xE9;
 			m_memory[121] = 0xFF;
+			m_memory[122] = 0xFF;
+			m_memory[123] = 0xFF;
 		}
 	};
 

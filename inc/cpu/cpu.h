@@ -106,6 +106,8 @@ namespace mips
 		void executeLoadWordLROp(const std::string& mnemonic, const AdjustWordOp& adjustWord);
 		template<typename CopOp>
 		void executeCopOp(const std::string& mnemonic, const CopOp& copOp);
+		template<typename CopLoadStoreOp>
+		void executeCopLoadStoreOp(const std::string& mnemonic, const CopLoadStoreOp& copOp);
 		template<typename MovOp>
 		void executeMovHiLo(const std::string& mnemonic, const MovOp& movOp);
 		template<typename StoreOp>
@@ -175,5 +177,6 @@ namespace mips
 		void srlv();
 		void sub();
 		void subu();
+		void swc2();
 	};
 }

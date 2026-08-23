@@ -12,13 +12,13 @@ namespace psx
 		BUS();
 		~BUS() {};
 		void     loadTest(std::shared_ptr<testing::Test>& test);
-		uint8_t  readByte(uint32_t memoryAddress);
-		uint16_t readHalfword(uint32_t memoryAddress);
-		uint32_t readWord(uint32_t memoryAddress);
+		uint8_t  readByte(uint32_t addr);
+		uint16_t readHalfword(uint32_t addr);
+		uint32_t readWord(uint32_t addr);
 
-		void storeByte(uint32_t memoryAddress, uint8_t data);
-		void storeHalfword(uint32_t memoryAddress, uint16_t data);
-		void storeWord(uint32_t memoryAddress, uint16_t data);
+		void storeByte(uint32_t addr, uint8_t data);
+		void storeHalfword(uint32_t addr, uint16_t data);
+		void storeWord(uint32_t addr, uint32_t data);
 
 		bool     isProgramEnd(uint32_t pc);
 

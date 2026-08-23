@@ -70,7 +70,7 @@ public:
 	
 	uint32_t getCurrentAddr();
 
-	void addInstruction(InstructionDescriptor instruction, uint32_t memoryAddr = cpu_constants::END);
+	void addInstruction(InstructionDescriptor instruction, uint32_t addr = cpu_constants::END);
 	void nop();
 	void label(std::string name);
 	void endProgram();
@@ -102,6 +102,7 @@ public:
 	void lwl(uint32_t rt, uint32_t base, int16_t offset);
 	void lwr(uint32_t rt, uint32_t base, int16_t offset);
 	void lwc2(uint32_t rt, uint32_t base, int16_t offset);
+	void swc2(uint32_t rt, uint32_t base, int16_t offset);
 	void sll(uint32_t rd, uint32_t rt, uint32_t sa);
 	void sra(uint32_t rd, uint32_t rt, uint32_t sa);
 	void srav(uint32_t rd, uint32_t rt, uint32_t rs);

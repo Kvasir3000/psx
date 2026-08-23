@@ -222,12 +222,7 @@ namespace testing
 
 	void Test::initRegister(uint32_t registerIdx, uint32_t value)
 	{
-		InstructionDescriptor instruction = { 0 };
-		instruction.primaryOpcode = ADDI;
-		instruction.rt = registerIdx;
-		instruction.rs = registerIdx;
-		instruction.immediate = value;
-		addInstruction(instruction);
+		addRsRtImmOp(ADDI, registerIdx, registerIdx, value);
 	}
 
 	void Test::mult(uint32_t rs, uint32_t rt)
@@ -369,6 +364,11 @@ namespace testing
 	void Test::lwc2(uint32_t rt, uint32_t base, int16_t offset)
 	{
 		addRtBaseOffsetOp(LWC2, rt, base, offset);
+	}
+
+	void Test::swc2(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRtBaseOffsetOp(SWC2, rt, base, offset);
 	}
 
 	void Test::sll(uint32_t rd, uint32_t rt, uint32_t sa)
