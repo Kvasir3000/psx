@@ -147,6 +147,12 @@ public:
 	void jal(const std::string& procedureName);
 	void jalr(uint32_t rs, uint32_t rd);
 	void jr(uint32_t rs);
+	void swl(uint32_t rt, uint32_t base, int16_t offset);
+	void swr(uint32_t rt, uint32_t base, int16_t offset);
+	void syscall();
+	void xor_(uint32_t rd, uint32_t rs, uint32_t rt);
+	void xori(uint32_t rt, uint32_t rs, uint16_t immediate);
+
 
 	//	slti
 };

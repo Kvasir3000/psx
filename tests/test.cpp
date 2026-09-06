@@ -778,4 +778,31 @@ namespace testing
 	{
 		addRsOp(JR, rs);
 	}
+
+	void Test::swl(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRtBaseOffsetOp(SWL, rt, base, offset);
+	}
+
+	void Test::swr(uint32_t rt, uint32_t base, int16_t offset)
+	{
+		addRtBaseOffsetOp(SWR, rt, base, offset);
+	}
+
+	void Test::syscall()
+	{
+		InstructionDescriptor instruction = { 0 };
+		instruction.secondaryOpcode = SYSCALL;
+		addInstruction(instruction);
+	}
+
+	void Test::xor_(uint32_t rd, uint32_t rs, uint32_t rt)
+	{
+		addRdRSRtOp(XOR, rd, rs, rt);
+	}
+
+	void Test::xori(uint32_t rt, uint32_t rs, uint16_t immediate)
+	{
+		addRsRtImmOp(XORI, rs, rt, immediate);
+	}
 }

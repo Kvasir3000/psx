@@ -34,36 +34,41 @@ void mips::CPU::fillPrimaryOpcodeTable()
 	m_primaryOpcodeTable[SLTI]  = std::bind(&CPU::slti,  this);
 	m_primaryOpcodeTable[SLTIU] = std::bind(&CPU::sltiu, this);
 	m_primaryOpcodeTable[SWC2]  = std::bind(&CPU::swc2,  this);
+	m_primaryOpcodeTable[SWL]	= std::bind(&CPU::swl,   this);
+	m_primaryOpcodeTable[SWR]	= std::bind(&CPU::swr,   this);
+	m_primaryOpcodeTable[XORI]	= std::bind(&CPU::xori,  this);
 }
 
 void mips::CPU::fillSecondaryOpcodeTable()
 {
-	m_secondaryOpcodeTable[ADD]   = std::bind(&CPU::add,    this);
-	m_secondaryOpcodeTable[ADDU]  = std::bind(&CPU::addu,   this);
-	m_secondaryOpcodeTable[AND]   = std::bind(&CPU::and_,   this);
-	m_secondaryOpcodeTable[BREAK] = std::bind(&CPU::break_, this);
-	m_secondaryOpcodeTable[DIV]   = std::bind(&CPU::div,    this);
-	m_secondaryOpcodeTable[DIVU]  = std::bind(&CPU::divu,   this);
-	m_secondaryOpcodeTable[JALR]  = std::bind(&CPU::jalr,   this);
-	m_secondaryOpcodeTable[JR]    = std::bind(&CPU::jr,     this);
-	m_secondaryOpcodeTable[MFHI]  = std::bind(&CPU::mfhi,   this);
-	m_secondaryOpcodeTable[MFLO]  = std::bind(&CPU::mflo,   this);
-	m_secondaryOpcodeTable[MTHI]  = std::bind(&CPU::mthi,   this);
-	m_secondaryOpcodeTable[MTLO]  = std::bind(&CPU::mtlo,   this);
-	m_secondaryOpcodeTable[MULT]  = std::bind(&CPU::mult,   this);
-	m_secondaryOpcodeTable[MULTU] = std::bind(&CPU::multu,  this);
-	m_secondaryOpcodeTable[NOR]   = std::bind(&CPU::nor,    this);
-	m_secondaryOpcodeTable[OR]    = std::bind(&CPU::or_,    this);
-	m_secondaryOpcodeTable[SLL]   = std::bind(&CPU::sll,    this);
-	m_secondaryOpcodeTable[SLLV]  = std::bind(&CPU::sllv,   this);
-	m_secondaryOpcodeTable[SLT]   = std::bind(&CPU::slt,    this);
-	m_secondaryOpcodeTable[SLTU]  = std::bind(&CPU::sltu,   this);
-	m_secondaryOpcodeTable[SRA]   = std::bind(&CPU::sra,    this);
-	m_secondaryOpcodeTable[SRAV]  = std::bind(&CPU::srav,   this);
-	m_secondaryOpcodeTable[SRL]   = std::bind(&CPU::srl,    this);
-	m_secondaryOpcodeTable[SRLV]  = std::bind(&CPU::srlv,   this);
-	m_secondaryOpcodeTable[SUB ]  = std::bind(&CPU::sub,    this);
-	m_secondaryOpcodeTable[SUBU]  = std::bind(&CPU::subu,   this);
+	m_secondaryOpcodeTable[ADD]      = std::bind(&CPU::add,     this);
+	m_secondaryOpcodeTable[ADDU]     = std::bind(&CPU::addu,    this);
+	m_secondaryOpcodeTable[AND]      = std::bind(&CPU::and_,    this);
+	m_secondaryOpcodeTable[BREAK]    = std::bind(&CPU::break_,  this);
+	m_secondaryOpcodeTable[DIV]      = std::bind(&CPU::div,     this);
+	m_secondaryOpcodeTable[DIVU]     = std::bind(&CPU::divu,    this);
+	m_secondaryOpcodeTable[JALR]     = std::bind(&CPU::jalr,    this);
+	m_secondaryOpcodeTable[JR]       = std::bind(&CPU::jr,      this);
+	m_secondaryOpcodeTable[MFHI]     = std::bind(&CPU::mfhi,    this);
+	m_secondaryOpcodeTable[MFLO]     = std::bind(&CPU::mflo,    this);
+	m_secondaryOpcodeTable[MTHI]     = std::bind(&CPU::mthi,    this);
+	m_secondaryOpcodeTable[MTLO]     = std::bind(&CPU::mtlo,    this);
+	m_secondaryOpcodeTable[MULT]     = std::bind(&CPU::mult,    this);
+	m_secondaryOpcodeTable[MULTU]    = std::bind(&CPU::multu,   this);
+	m_secondaryOpcodeTable[NOR]      = std::bind(&CPU::nor,     this);
+	m_secondaryOpcodeTable[OR]       = std::bind(&CPU::or_,     this);
+	m_secondaryOpcodeTable[SLL]      = std::bind(&CPU::sll,     this);
+	m_secondaryOpcodeTable[SLLV]     = std::bind(&CPU::sllv,    this);
+	m_secondaryOpcodeTable[SLT]      = std::bind(&CPU::slt,     this);
+	m_secondaryOpcodeTable[SLTU]     = std::bind(&CPU::sltu,    this);
+	m_secondaryOpcodeTable[SRA]      = std::bind(&CPU::sra,     this);
+	m_secondaryOpcodeTable[SRAV]     = std::bind(&CPU::srav,    this);
+	m_secondaryOpcodeTable[SRL]      = std::bind(&CPU::srl,     this);
+	m_secondaryOpcodeTable[SRLV]     = std::bind(&CPU::srlv,    this);
+	m_secondaryOpcodeTable[SUB ]     = std::bind(&CPU::sub,     this);
+	m_secondaryOpcodeTable[SUBU]     = std::bind(&CPU::subu,    this);
+	m_secondaryOpcodeTable[SYSCALL]  = std::bind(&CPU::syscall, this);
+	m_secondaryOpcodeTable[XOR]		 = std::bind(&CPU::xor_,    this);
 }
 
 void mips::CPU::fillREGIMMOpcodeTable()
@@ -429,6 +434,30 @@ void mips::CPU::executeImmediateSetOnOp(const std::string& mnemonic, const SetOp
 		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rs, immediate);
 	}
 }
+
+template <typename AdjustWordOp>
+void mips::CPU::executeStoreWordLROp(const std::string& mnemonic, const AdjustWordOp& adjustWord)
+{
+	uint32_t            rtIdx = m_instruction.getRT();
+	uint32_t            baseIdx = m_instruction.getBase();
+
+	Register<uint32_t>	rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
+	Register<uint32_t>  base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
+	Immediate<int32_t>  offset = Immediate<int32_t>(m_instruction.getOffset());
+
+	uint32_t effectiveAddr = base.value + offset.value;
+	uint32_t alignedAddr = effectiveAddr & ~cpu_constants::WORD_ALIGNED_MASK;
+	uint32_t memoryWord = m_context->getBus()->readWord(alignedAddr);
+
+	uint32_t adjustedWord = adjustWord(memoryWord, rt.value, effectiveAddr & cpu_constants::WORD_ALIGNED_MASK);
+	m_context->getBus()->storeWord(alignedAddr, adjustedWord);
+
+	if (m_context->isDebug())
+	{
+		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
+	}
+}
+
 
 void mips::CPU::add()
 {
@@ -863,10 +892,49 @@ void mips::CPU::subu()
 
 void mips::CPU::swc2()
 {
-	auto storeWordCop2 = [this](uint32_t addr, uint32_t rtIdx)->void
+	auto storeWordCop2Op = [this](uint32_t addr, uint32_t rtIdx)->void
 	{
 		uint32_t word = m_gte.readDataRegister(rtIdx);
 		m_context->getBus()->storeWord(addr, word);
 	};
-	executeCopLoadStoreOp("swc2", storeWordCop2);
+	executeCopLoadStoreOp("swc2", storeWordCop2Op);
+}
+
+void mips::CPU::swl()
+{
+	auto adjustWordOp = [](uint32_t memoryWord, uint32_t registerWord, uint32_t addrOffset)->uint32_t
+	{
+		memoryWord &= cpu_constants::WORD_MASK << ((1 + addrOffset) * cpu_constants::BYTE_SIZE_BITS);
+	    registerWord >>= ((3 - addrOffset) * cpu_constants::BYTE_SIZE_BITS);
+		return memoryWord | registerWord;
+	};
+	executeStoreWordLROp("swl", adjustWordOp);
+}
+
+void mips::CPU::swr()
+{
+	auto adjustWord = [](uint32_t memoryWord, uint32_t registerWord, uint32_t addrOffset)->uint32_t
+	{
+		memoryWord &= cpu_constants::WORD_MASK >> ((4 - addrOffset) * cpu_constants::BYTE_SIZE_BITS);
+	    registerWord <<= (addrOffset * cpu_constants::BYTE_SIZE_BITS);
+		return memoryWord | registerWord;
+	};
+	executeStoreWordLROp("swr", adjustWord);
+}
+
+void mips::CPU::syscall()
+{
+	m_context->getDebugger()->logWarning("SYSCALL is not implement yet");
+}
+
+void mips::CPU::xor_()
+{
+	auto xorOp = [](uint32_t operand1, uint32_t operand2)->uint32_t { return operand1 ^ operand2; };
+	executeRegisterArithmeticOp<uint32_t>("xor", xorOp, false);
+}
+
+void mips::CPU::xori()
+{
+	auto xoriOp = [](uint32_t operand1, uint16_t operand2)->uint32_t { return operand1 ^ operand2; };
+	executeImmediateArithmeticOp<uint32_t>("xori", xoriOp, false);
 }

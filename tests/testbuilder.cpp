@@ -63,6 +63,11 @@ namespace testing
 		return addTest<TestJump>();
 	}
 
+	TestBuilder& TestBuilder::addTestStoreWLR()
+	{
+		return addTest<TestStoreWLR>();
+	}
+
 	const std::vector<std::shared_ptr<Test>>& TestBuilder::build() const
 	{
 		for (auto test : m_tests)

@@ -90,7 +90,7 @@ namespace testing
 	public: 
 		TestArithmeticOps() : Test("TEST_ARITHMETIC_OPS")
 		{
-			lw(v0, zero, 100);
+			lw(v0, zero, 200);
 			initRegister(v1, v1);
 			mult(v0, v1);
 			multu(v0, v1);
@@ -101,7 +101,7 @@ namespace testing
 			initRegister(t1, 1);
 			or_(t1, t1, t0);
 			ori(t1, t1, 0b1000);
-			lw(t0, zero, 100);
+			lw(t0, zero, 200);
 			nop(); 
 			addiu(t0, t0, -4);
 			addu(t0, t1, t0);
@@ -113,14 +113,19 @@ namespace testing
 			divu(t0, t1);
 			sub(t2, t1, t0);
 			subu(t2, t0, t1);
+			lhu(t3, zero, 200);
+			lw(t0, zero, 200);
+			nop();
+			xor_(t2, t0, t3);
+			xori(t2, t0, 0xFF);
 			endProgram();
 
 
 			// 2147483647
-			m_memory[100] = 0xFF;
-			m_memory[101] = 0xFF;
-			m_memory[102] = 0xFF;
-			m_memory[103] = 0xFF;
+			m_memory[200] = 0xFF;
+			m_memory[201] = 0xFF;
+			m_memory[202] = 0xFF;
+			m_memory[203] = 0xFF;
 		}
 	};
 	
@@ -477,6 +482,81 @@ namespace testing
 				nop();
 			}
 		};
+	};
+
+	class TestStoreWLR : public Test
+	{
+	public:
+		TestStoreWLR() : Test("TEST_STORE_WLR")
+		{
+
+			label("swl");
+			{
+				initRegister(t4, 0);
+				initRegister(t5, 4);
+				label("swl_loop");
+				{
+					beq(t4, t5, "return_to_main");
+					add(t6, t4, t1);
+					swl(t0, t6, 0);
+					lw(t3, t1, 0);
+					j("swl_loop");
+					addi(t4, t4, 1);
+				}
+
+				label("return_to_main");
+				{
+					jr(ra);
+					nop();
+				}
+			}
+
+			label("swr");
+			{
+				addi(t4, zero, 3);
+				label("swr_loop");
+				{
+					bltz(t4, "return_to_main");
+					add(t5, t4, t1);
+					swr(t0, t5, 0);
+					lw(t3, t1, 0);
+					j("swr_loop");
+					addi(t4, t4, -1);
+				}
+
+				label("return_to_main");
+				{
+					jr(ra);
+					nop();
+				}
+			}
+
+
+			label("main");
+			{
+				initRegister(t0, 0xAABB);
+				sll(t0, t0, 16);
+				ori(t0, t0, 0xCCDD);
+				initRegister(t1, 200);
+				jal("swl");
+				nop();
+				addi(t1, t1, 4);
+				jal("swr");
+				nop();
+				syscall();
+			}
+
+			endProgram();
+
+			m_memory[200] = 0xEE;
+			m_memory[201] = 0xEE;
+			m_memory[202] = 0xEE;
+			m_memory[203] = 0xEE;
+			m_memory[204] = 0xFF;
+			m_memory[205] = 0xFF;
+			m_memory[206] = 0xFF;
+			m_memory[207] = 0xFF;
+		}
 	};
 
 }

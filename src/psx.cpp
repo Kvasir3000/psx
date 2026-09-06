@@ -13,14 +13,16 @@ psx::PlayStation::PlayStation() :
 	m_cpu_tests = testBuilder.addTestMove().
 							  addTestSetOn().
 							  addTestArithmeticOps().
-						   	  addTestLoadWLR().
-						      addTestStore().
+							  addTestLoadWLR().
+							  addTestStore().
 							  addTestLoadByteOperations().
 							  addTestLoadHalfwordOperations().
 							  addTestLoad().
-						      addTestLoadCOP2().
+							  addTestLoadCOP2().
 							  addTestBranch().
 							  addTestJump().
+							  addTestArithmeticOps().
+							  addTestStoreWLR().
 		                      build();
 
 	readProgramFile();

@@ -31,6 +31,8 @@ namespace testing
 		TestBuilder& addTestLoadCOP2();
 		TestBuilder& addTestBranch();
 		TestBuilder& addTestJump();
+		TestBuilder& addTestStoreWLR();
+
 		const std::vector<std::shared_ptr<Test>>& build() const;
 	};
 }

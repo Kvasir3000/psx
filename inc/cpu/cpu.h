@@ -118,6 +118,8 @@ namespace mips
 		void executeRegisterSetOnOp(const std::string& mnemonic, const SetOp& setOp);
 		template<typename Type, typename SetOp>
 		void executeImmediateSetOnOp(const std::string& mnemonic, const SetOp& setOp);
+		template <typename AdjustWordOp>
+		void executeStoreWordLROp(const std::string& mnemonic, const AdjustWordOp& adjustWord);
 
 		void add();
 		void addi();
@@ -178,5 +180,10 @@ namespace mips
 		void sub();
 		void subu();
 		void swc2();
+		void swl();
+		void swr();
+		void syscall();
+		void xor_();
+		void xori();
 	};
 }
