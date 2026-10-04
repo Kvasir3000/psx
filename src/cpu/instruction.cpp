@@ -1,5 +1,6 @@
 #include "../../inc/cpu/instruction.h"
 #include "../../inc/constants/cpu_constants.h"
+#include "../../inc/cpu/opcodes.h"
 
 Instruction::Instruction(uint32_t word) :
 	m_instructionWord(word)
@@ -100,4 +101,129 @@ int16_t Instruction::getOffset()
 int32_t Instruction::getJumpTarget()
 {
 	return (m_instructionWord & cpu_constants::JUMP_TARGET_MASK);
+}
+
+
+bool Instruction::validPrimaryInstruction()
+{
+	switch (getPrimaryOpcode())
+	{
+	case ADDI:
+	case ADDIU:
+	case ANDI:
+	case BEQ:
+	case BGTZ:
+	case BLEZ:
+	case BNE:
+	case COP0_:
+	case COP2:
+	case J:
+	case JAL:
+	case LB:
+	case LBU:
+	case LH:
+	case LHU:
+	case LUI:
+	case LW:
+	case LWC2:
+	case LWL:
+	case LWR:
+	case ORI:
+	case SB:
+	case SH:
+	case SLTI:
+	case SLTIU:
+	case SWC2:
+	case SWL:
+	case SWR:
+	case XORI:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool Instruction::validSecondaryInstruction()
+{
+	switch (getSecondaryOpcode())
+	{
+	case ADD:
+	case ADDU:
+	case AND:
+	case BREAK:
+	case DIV:
+	case DIVU:
+	case JALR:
+	case JR:
+	case MFHI:
+	case MFLO:
+	case MTHI:
+	case MTLO:
+	case MULT:
+	case MULTU:
+	case NOR:
+	case OR:
+	case SLL:
+	case SLLV:
+	case SLT:
+	case SLTU:
+	case SRA:
+	case SRAV:
+	case SRL:
+	case SUB:
+	case SUBU:
+	case SYSCALL:
+	case XOR:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool Instruction::validRegimInstruction()
+{
+	switch (getREGIMMOpcode())
+	{
+	case BGEZ:
+	case BGEZAL:
+	case BLTZ:
+	case BLTZAL:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool Instruction::validCOPInstruction()
+{
+	switch (getCOPOpcode())
+	{
+	case CFC:
+	case CTC:
+	case MFC:
+	case MTC:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool Instruction::isInstructionValid()
+{
+	if (isREGIMM())
+	{
+		return validRegimInstruction();
+	}
+	else if (isCOP())
+	{
+		return validCOPInstruction();
+	}
+	else if (isPrimary())
+	{
+		return validPrimaryInstruction();
+	}
+	else if (isSecondary())
+	{
+		return validSecondaryInstruction();
+	}
 }

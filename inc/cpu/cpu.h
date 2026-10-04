@@ -16,6 +16,7 @@
 #include "../inc/cpu/instruction.h"
 #include "../inc/cpu/gte.h"
 #include "../inc/cpu/cop0.h"
+#include "../cpu/decoder.h"
 
 namespace mips
 {
@@ -33,6 +34,8 @@ namespace mips
 	private:
 
 		std::shared_ptr<psx::Context>                                  m_context;
+		std::shared_ptr<psx::BUS>									   m_bus;
+		std::shared_ptr<psx::Debugger>                                 m_debugger;
 		std::array<uint32_t, cpu_constants::NUMBER_OF_REGISTERS>       m_registerFile;
 		uint32_t                                                       m_hi;
 		uint32_t                                                       m_lo;
@@ -77,6 +80,8 @@ namespace mips
 		void executeInstruction();
 		void executeDelayedBranch();
 		void executeDelayedLoad();
+
+	   std::unique_ptr<Decoder<CPU>> m_decoder;
 
 		bool checkOverflow(int32_t num1, int32_t num2, int32_t result);
 		bool isAligned(uint32_t addr, cpu_constants::LoadSize loadSize);

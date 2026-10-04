@@ -9,13 +9,13 @@
 
 psx::BUS::BUS()
 { 
-
+	m_memory.resize(MEMORY_SIZE);
 }
 
 void psx::BUS::loadTest(std::shared_ptr<testing::Test>& test)
 {
 	const uint8_t* testBin = test->getTestBin();
-	memcpy(m_memory, testBin, MEMORY_SIZE);
+	memcpy(&(*m_memory.begin()), testBin, MEMORY_SIZE);
 }
 
 uint8_t psx::BUS::readByte(uint32_t addr) 
@@ -64,5 +64,5 @@ bool psx::BUS::isProgramEnd(uint32_t pc)
 
 void psx::BUS::reset()
 {
-	memset(m_memory, 0, MEMORY_SIZE);
+	memset(&(*m_memory.begin()), 0, MEMORY_SIZE);
 }

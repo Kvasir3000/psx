@@ -16,9 +16,10 @@ namespace psx
 		
 		 
 	public:
-		Context(std::shared_ptr<BUS> bus);
+		Context(std::shared_ptr<BUS> bus, std::shared_ptr<psx::Debugger> debugger);
 		std::shared_ptr<BUS> getBus();
 		bool isDebug();
 		std::shared_ptr<Debugger> getDebugger();
+		void setMode(Mode mode);
 	};
 }

@@ -13,7 +13,7 @@ namespace testing
 class Test
 {
 private: 
-	static constexpr uint32_t				   MEMORY_SIZE = 750;
+	static constexpr uint32_t				   MEMORY_SIZE = 0x7FFF10;
 	std::string								   m_name; 
 	std::unordered_map<std::string, uint32_t>  m_labelAddrMap;
 
@@ -42,6 +42,7 @@ public:
 	uint32_t            getStartAddr();
 	uint32_t			getInstructionCount();
 	void                link();
+	void                generateBinary();
 
 
 	uint32_t    m_instructionCounter = 0;

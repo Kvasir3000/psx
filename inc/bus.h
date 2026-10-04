@@ -26,8 +26,8 @@ namespace psx
 
 	private:
 
-		static constexpr uint32_t MEMORY_SIZE = 750;
-		uint8_t m_memory[MEMORY_SIZE] = { 0 };
+		static constexpr uint32_t MEMORY_SIZE = 0x7FFF10;
+		std::vector<uint8_t> m_memory;
 	
 	};
 }

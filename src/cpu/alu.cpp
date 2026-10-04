@@ -105,7 +105,7 @@ void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, const A
 	if (m_context->isDebug())
 	{
 		Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);		
+		m_debugger->logGenericRegOp(mnemonic, rd, rs, rt);		
 	}
 
 	if (catchException && checkOverflow(rs.value, rt.value, result))
@@ -127,7 +127,7 @@ void mips::CPU::executeHiLoArithmeticOp(const std::string& mnemonic, const HiLoA
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logHiLoArithmeticOp(mnemonic, (Type)m_hi, (Type)m_lo, rs, rt);
+		m_debugger->logHiLoArithmeticOp(mnemonic, (Type)m_hi, (Type)m_lo, rs, rt);
 	}
 }
 
@@ -145,7 +145,7 @@ void mips::CPU::executeImmediateArithmeticOp(const std::string& mnemonic, const 
 	if (m_context->isDebug())
 	{
 		rt.set_value(result);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rs, immediate);
+		m_debugger->logGenericRegOp(mnemonic, rt, rs, immediate);
 	}
 
 	if (catchException && checkOverflow(m_registerFile[rsIdx], immediate.value, result))
@@ -173,7 +173,7 @@ void mips::CPU::executeBranchZeroOp(const std::string& mnemonic, const BranchZer
 	if (m_context->isDebug())
 	{
 		bool ignoreBranch = m_delaySlot.status != cpu_constants::DelaySlotState::Pending;
-		m_context->getDebugger()->logBranchOp(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, offset);
+		m_debugger->logBranchOp(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, offset);
 	}
 };
 
@@ -195,7 +195,7 @@ void mips::CPU::executeBranchOp(const std::string& mnemonic, const BranchOp& bra
 	if (m_context->isDebug())
 	{
 		bool ignoreBranch = m_delaySlot.status != cpu_constants::DelaySlotState::Pending;
-		m_context->getDebugger()->logBranchOp(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, rt, offset);
+		m_debugger->logBranchOp(mnemonic, ignoreBranch, m_delaySlot.targetAddr, rs, rt, offset);
 	}
 }
 
@@ -206,7 +206,7 @@ void mips::CPU::executeJumpOp(const std::string& mnemonic)
 	m_delaySlot.targetAddr = ((m_pc + cpu_constants::WORD_SIZE_BYTES) & cpu_constants::PC_HIGH_BITS_MASK) | (target << 2);
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logBranchOp(mnemonic, false, m_delaySlot.targetAddr, Immediate<uint32_t>(target));
+		m_debugger->logBranchOp(mnemonic, false, m_delaySlot.targetAddr, Immediate<uint32_t>(target));
 	}
 }
 
@@ -226,7 +226,7 @@ void mips::CPU::excecuteJumpRegisterOp(const std::string& mnemonic)
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rs);
+		m_debugger->logGenericRegOp(mnemonic, rs);
 	}
 }
 
@@ -253,12 +253,12 @@ void mips::CPU::executeLoadOp(const std::string& mnemonic, const LoadOp& loadOp)
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
+		m_debugger->logMemoryOp(mnemonic, rt, offset, base);
 	}
 
 	if (isAligned(addr, load.size))
 	{
-		m_context->getDebugger()->logWarning("Accessed unaligned memory ^");;
+		m_debugger->logWarning("Accessed unaligned memory ^");;
 	}
 }
 
@@ -271,7 +271,7 @@ void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const AdjustWor
 
 	uint32_t effectiveAddr = m_registerFile[baseIdx] + offset.value;
 	uint32_t alignedAddr = effectiveAddr & ~cpu_constants::WORD_ALIGNED_MASK;
-	uint32_t word = m_context->getBus()->readWord(alignedAddr);
+	uint32_t word = m_bus->readWord(alignedAddr);
 	uint32_t sourceRt = m_registerFile[rtIdx];
 
 	if (!m_delayLoads.empty() && m_delayLoads.front().registerIdx == rtIdx)
@@ -284,7 +284,7 @@ void mips::CPU::executeLoadWordLROp(const std::string& mnemonic, const AdjustWor
 	{
 		Register<uint32_t> base = Register<uint32_t>(baseIdx, m_registerFile[baseIdx]);
 		Register<uint32_t> rt   = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
-		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
+		m_debugger->logMemoryOp(mnemonic, rt, offset, base);
 	}
 
 	DelayLoad load;
@@ -316,7 +316,7 @@ void mips::CPU::executeCopOp(const std::string& mnemonic, const CopOp& copOp)
 		uint32_t		   copIdx = m_instruction.getCOPIdx();
 		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
 		COPRegister        rd = COPRegister(copIdx, rdIdx, m_copMap[copIdx]->readDataRegister(rdIdx));
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rd);
+		m_debugger->logGenericRegOp(mnemonic, rt, rd);
 	}
 	raiseException("Coprocessor unusable");
 }
@@ -337,13 +337,13 @@ void mips::CPU::executeCopLoadStoreOp(const std::string& mnemonic, const CopLoad
 	if (m_context->isDebug())
 	{
 		COPRegister	rt = COPRegister(2, rtIdx, m_gte.readDataRegister(rtIdx));
-		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
+		m_debugger->logMemoryOp(mnemonic, rt, offset, base);
 	}
 
 
 	if (isAligned(addr, cpu_constants::LoadSize::Word))
 	{
-		m_context->getDebugger()->logWarning("Accessed unaligned memory ^");
+		m_debugger->logWarning("Accessed unaligned memory ^");
 	}
 
 	raiseException("Coprocessor unusable bit is not implemented yet");
@@ -358,7 +358,7 @@ void mips::CPU::executeMovHiLo(const std::string& mnemonic, const MovOp& movOp)
 	if (m_context->isDebug())
 	{
 		Register<uint32_t> reg = Register<uint32_t>(regIdx, m_registerFile[regIdx]);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, reg);
+		m_debugger->logGenericRegOp(mnemonic, reg);
 	}
 }
 
@@ -377,7 +377,7 @@ void mips::CPU::executeStoreOp(const std::string& mnemonic, const StoreOp& store
 	
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
+		m_debugger->logMemoryOp(mnemonic, rt, offset, base);
 	}
 
 	raiseException("Store exceptions are not implemented yet"); 
@@ -393,7 +393,7 @@ void mips::CPU::executeShiftOp(const std::string& mnemonic, const SourceValue& s
 	if (m_context->isDebug())
 	{
 		Register<uint32_t> rd = Register<uint32_t>(rdIdx, m_registerFile[rdIdx]);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, source, shift);
+		m_debugger->logGenericRegOp(mnemonic, rd, source, shift);
 	}
 }
 
@@ -413,7 +413,7 @@ void mips::CPU::executeRegisterSetOnOp(const std::string& mnemonic, const SetOp&
 	if (m_context->isDebug())
 	{
 		Register<Type> rd = Register<Type>(rdIdx, m_registerFile[rdIdx]);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rd, rs, rt);
+		m_debugger->logGenericRegOp(mnemonic, rd, rs, rt);
 	}
 }
 
@@ -424,14 +424,14 @@ void mips::CPU::executeImmediateSetOnOp(const std::string& mnemonic, const SetOp
 	uint32_t rsIdx = m_instruction.getRS();
 
 	Immediate<Type> immediate = Immediate<Type>(m_instruction.getImmediate());
-	Register<Type>     rs = Register<Type>(rsIdx, m_registerFile[rsIdx]);
+	Register<Type>  rs        = Register<Type>(rsIdx, m_registerFile[rsIdx]);
 
 	m_registerFile[rtIdx] = setOp(rs.value, immediate.value);
 
 	if (m_context->isDebug())
 	{
 		Register<Type> rt = Register<Type>(rtIdx, m_registerFile[rtIdx]);
-		m_context->getDebugger()->logGenericRegOp(mnemonic, rt, rs, immediate);
+		m_debugger->logGenericRegOp(mnemonic, rt, rs, immediate);
 	}
 }
 
@@ -447,14 +447,14 @@ void mips::CPU::executeStoreWordLROp(const std::string& mnemonic, const AdjustWo
 
 	uint32_t effectiveAddr = base.value + offset.value;
 	uint32_t alignedAddr = effectiveAddr & ~cpu_constants::WORD_ALIGNED_MASK;
-	uint32_t memoryWord = m_context->getBus()->readWord(alignedAddr);
+	uint32_t memoryWord = m_bus->readWord(alignedAddr);
 
 	uint32_t adjustedWord = adjustWord(memoryWord, rt.value, effectiveAddr & cpu_constants::WORD_ALIGNED_MASK);
-	m_context->getBus()->storeWord(alignedAddr, adjustedWord);
+	m_bus->storeWord(alignedAddr, adjustedWord);
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->logMemoryOp(mnemonic, rt, offset, base);
+		m_debugger->logMemoryOp(mnemonic, rt, offset, base);
 	}
 }
 
@@ -560,7 +560,7 @@ void mips::CPU::cop()
 {
 	uint32_t    copIdx = m_instruction.getCOPIdx();
 	std::string warning = "COP" + std::to_string(copIdx) + " is note implemented yet";
-	m_context->getDebugger()->logWarning(warning);
+	m_debugger->logWarning(warning);
 }
 
 void mips::CPU::ctc2()
@@ -581,7 +581,7 @@ void mips::CPU::div()
 			}
 			else
 			{
-				m_context->getDebugger()->logWarning("Instruction tried to divide by 0: ");
+				m_debugger->logWarning("Instruction tried to divide by 0: ");
 			}
 			return 0;
 	};
@@ -599,7 +599,7 @@ void mips::CPU::divu()
 			}
 			else
 			{
-				m_context->getDebugger()->logWarning("Instruction tried to divide by 0: ");
+				m_debugger->logWarning("Instruction tried to divide by 0: ");
 			}
 			return 0;
 	};
@@ -629,25 +629,25 @@ void mips::CPU::jr()
 
 void mips::CPU::lb()
 {
-	auto loadByteOp = [this](uint32_t addr)->int8_t { return m_context->getBus()->readByte(addr); };
+	auto loadByteOp = [this](uint32_t addr)->int8_t { return m_bus->readByte(addr); };
 	executeLoadOp<int8_t>("lb", loadByteOp);
 }
 
 void mips::CPU::lbu()
 {
-	auto loadByteOp = [this](uint32_t addr)->uint8_t { return m_context->getBus()->readByte(addr); };
+	auto loadByteOp = [this](uint32_t addr)->uint8_t { return m_bus->readByte(addr); };
 	executeLoadOp<uint8_t>("lbu", loadByteOp);
 }
 
 void mips::CPU::lh()
 {
-	auto loadHalfwordOp = [this](uint32_t addr)->int16_t { return m_context->getBus()->readHalfword(addr); };
+	auto loadHalfwordOp = [this](uint32_t addr)->int16_t { return m_bus->readHalfword(addr); };
 	executeLoadOp<int16_t>("lh", loadHalfwordOp);
 };
 
 void mips::CPU::lhu()
 {
-	auto loadHalfwordOp = [this](uint32_t addr)->uint16_t { return m_context->getBus()->readHalfword(addr); };
+	auto loadHalfwordOp = [this](uint32_t addr)->uint16_t { return m_bus->readHalfword(addr); };
 	executeLoadOp<uint16_t>("lhu", loadHalfwordOp);
 }
 
@@ -661,13 +661,13 @@ void mips::CPU::lui()
 	if (m_context->isDebug())
 	{
 		Register<uint32_t> rt = Register<uint32_t>(rtIdx, m_registerFile[rtIdx]);
-		m_context->getDebugger()->logGenericRegOp("lui", rt, immediate);
+		m_debugger->logGenericRegOp("lui", rt, immediate);
 	}
 }
 
 void mips::CPU::lw()
 {
-	auto loadWord = [this](uint32_t addr)->uint32_t { return m_context->getBus()->readWord(addr); };
+	auto loadWord = [this](uint32_t addr)->uint32_t { return m_bus->readWord(addr); };
 	executeLoadOp<uint32_t>("lw", loadWord);
 }
 
@@ -675,7 +675,7 @@ void mips::CPU::lwc2()
 {
 	auto loadWordCop2 = [this](uint32_t addr, uint32_t rtIdx)->void 
 	{
-		uint32_t word = m_context->getBus()->readWord(addr);
+		uint32_t word = m_bus->readWord(addr);
 		m_gte.writeDataRegister(rtIdx, word);
 	};
 	executeCopLoadStoreOp("lwc2", loadWordCop2);
@@ -793,13 +793,13 @@ void mips::CPU::ori()
 
 void mips::CPU::sb()
 {
-	auto sbOp = [this](uint32_t addr, uint32_t data)->void { m_context->getBus()->storeByte(addr, data); };
+	auto sbOp = [this](uint32_t addr, uint32_t data)->void { m_bus->storeByte(addr, data); };
 	executeStoreOp("sb", sbOp);
 }
 
 void mips::CPU::sh()
 {
-	auto shOp = [this](uint32_t addr, uint32_t data)->void { m_context->getBus()->storeHalfword(addr, data); };
+	auto shOp = [this](uint32_t addr, uint32_t data)->void { m_bus->storeHalfword(addr, data); };
 	executeStoreOp("sh", shOp);
 }
 
@@ -895,7 +895,7 @@ void mips::CPU::swc2()
 	auto storeWordCop2Op = [this](uint32_t addr, uint32_t rtIdx)->void
 	{
 		uint32_t word = m_gte.readDataRegister(rtIdx);
-		m_context->getBus()->storeWord(addr, word);
+		m_bus->storeWord(addr, word);
 	};
 	executeCopLoadStoreOp("swc2", storeWordCop2Op);
 }
@@ -924,7 +924,7 @@ void mips::CPU::swr()
 
 void mips::CPU::syscall()
 {
-	m_context->getDebugger()->logWarning("SYSCALL is not implement yet");
+	m_debugger->logWarning("SYSCALL is not implement yet");
 }
 
 void mips::CPU::xor_()
