@@ -11,7 +11,7 @@ namespace psx
 	public:
 		BUS();
 		~BUS() {};
-		void     loadTest(std::shared_ptr<testing::Test>& test);
+		void     loadTest(std::shared_ptr<testing::Test>& test, uint32_t testSize);
 		uint8_t  readByte(uint32_t addr);
 		uint16_t readHalfword(uint32_t addr);
 		uint32_t readWord(uint32_t addr);
@@ -23,6 +23,8 @@ namespace psx
 		bool     isProgramEnd(uint32_t pc);
 
 		void     reset();
+
+		uint32_t getMemorySize();
 
 	private:
 

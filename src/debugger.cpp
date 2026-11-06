@@ -56,6 +56,7 @@ namespace psx
 	{
 		if (m_mode == Mode::DIS)
 		{
+			OUTPUT_STREAM << "\n";
 			return;
 		}
 

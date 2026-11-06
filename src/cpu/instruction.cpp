@@ -103,7 +103,6 @@ int32_t Instruction::getJumpTarget()
 	return (m_instructionWord & cpu_constants::JUMP_TARGET_MASK);
 }
 
-
 bool Instruction::validPrimaryInstruction()
 {
 	switch (getPrimaryOpcode())
@@ -135,6 +134,7 @@ bool Instruction::validPrimaryInstruction()
 	case SLTIU:
 	case SWC2:
 	case SWL:
+	case SW:
 	case SWR:
 	case XORI:
 		return true;

@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include "stdint.h"
+#include <sstream>
+#include <iomanip>
 
 namespace mips
 {
@@ -30,7 +32,10 @@ namespace mips
 	{
 		Immediate(Type v)
 		{
-			name = "$" + std::to_string(v);
+			std::stringstream stream;
+			stream << std::hex << std::setw(4) << std::setfill('0') << v;
+			//name = "$" + std::to_string(v);
+			name = "0x" + stream.str();
 			value = v;
 		};
 		Type value;

@@ -22,8 +22,3 @@ std::shared_ptr<psx::Debugger> psx::Context::getDebugger()
 {
 	return m_debugger;
 }
-
-void psx::Context::setMode(Mode mode)
-{
-	m_debugger->setMode(mode);
-}

@@ -20,6 +20,5 @@ namespace psx
 		std::shared_ptr<BUS> getBus();
 		bool isDebug();
 		std::shared_ptr<Debugger> getDebugger();
-		void setMode(Mode mode);
 	};
 }

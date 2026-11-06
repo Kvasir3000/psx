@@ -22,6 +22,8 @@ set(SOURCES
    tests/testsuits.h
    tests/testbuilder.h
    tests/registermap.h
+   disassembly/disassembly.cpp
+   disassembly/disassembly.h
    inc/bus.h
    inc/context.h
    inc/cpu/cpu.h
@@ -31,6 +33,7 @@ set(SOURCES
    inc/cpu/opcodes.h
    inc/cpu/gte.h
    inc/cpu/cop.h
+   inc/cpu/decoder.h
    inc/constants/debugger_constants.h
    inc/constants/cpu_constants.h
    inc/constants/gte_constants.h

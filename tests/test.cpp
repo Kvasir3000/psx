@@ -117,6 +117,12 @@ namespace testing
 		InstructionDescriptor instruction = { 0 };
 		instruction.immediate = cpu_constants::END;
 		addInstruction(instruction);
+		//generateBinary();
+	}
+
+	uint32_t Test::getSize()
+	{
+		return MEMORY_SIZE;
 	}
 
 	void Test::link()

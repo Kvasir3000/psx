@@ -3,91 +3,6 @@
 #include "../../inc/cpu/cpu.h"
 #include "../../inc/constants/debugger_constants.h"
 
-
-
-// TODO: Remove the function<> types below and use raw pointers instead, compare the perfomance as well
-void mips::CPU::fillPrimaryOpcodeTable()
-{
-	m_primaryOpcodeTable[ADDI]  = std::bind(&CPU::addi,  this);
-	m_primaryOpcodeTable[ADDIU] = std::bind(&CPU::addiu, this);
-	m_primaryOpcodeTable[ANDI]  = std::bind(&CPU::andi,  this);
-	m_primaryOpcodeTable[BEQ]   = std::bind(&CPU::beq,   this);
-	m_primaryOpcodeTable[BGTZ]	= std::bind(&CPU::bgtz,	 this);
-	m_primaryOpcodeTable[BLEZ]	= std::bind(&CPU::blez,	 this);
-	m_primaryOpcodeTable[BNE]   = std::bind(&CPU::bne,   this);
-	m_primaryOpcodeTable[COP0_] = std::bind(&CPU::cop,   this);
-	m_primaryOpcodeTable[COP2]  = std::bind(&CPU::cop,   this);
-	m_primaryOpcodeTable[J]     = std::bind(&CPU::j,	 this);
-	m_primaryOpcodeTable[JAL]   = std::bind(&CPU::jal,   this);
-	m_primaryOpcodeTable[LB]    = std::bind(&CPU::lb ,   this);
-	m_primaryOpcodeTable[LBU]   = std::bind(&CPU::lbu,   this);
-	m_primaryOpcodeTable[LH]    = std::bind(&CPU::lh,    this);
-	m_primaryOpcodeTable[LHU]   = std::bind(&CPU::lhu,   this);
-	m_primaryOpcodeTable[LUI]   = std::bind(&CPU::lui,   this);
-	m_primaryOpcodeTable[LW]    = std::bind(&CPU::lw,    this);
-	m_primaryOpcodeTable[LWC2]  = std::bind(&CPU::lwc2,  this);
-	m_primaryOpcodeTable[LWL]   = std::bind(&CPU::lwl ,  this);
-	m_primaryOpcodeTable[LWR]   = std::bind(&CPU::lwr,   this);
-	m_primaryOpcodeTable[ORI]   = std::bind(&CPU::ori,   this);
-	m_primaryOpcodeTable[SB]    = std::bind(&CPU::sb,    this);
-	m_primaryOpcodeTable[SH]    = std::bind(&CPU::sh,    this);
-	m_primaryOpcodeTable[SLTI]  = std::bind(&CPU::slti,  this);
-	m_primaryOpcodeTable[SLTIU] = std::bind(&CPU::sltiu, this);
-	m_primaryOpcodeTable[SWC2]  = std::bind(&CPU::swc2,  this);
-	m_primaryOpcodeTable[SWL]	= std::bind(&CPU::swl,   this);
-	m_primaryOpcodeTable[SWR]	= std::bind(&CPU::swr,   this);
-	m_primaryOpcodeTable[XORI]	= std::bind(&CPU::xori,  this);
-}
-
-void mips::CPU::fillSecondaryOpcodeTable()
-{
-	m_secondaryOpcodeTable[ADD]      = std::bind(&CPU::add,     this);
-	m_secondaryOpcodeTable[ADDU]     = std::bind(&CPU::addu,    this);
-	m_secondaryOpcodeTable[AND]      = std::bind(&CPU::and_,    this);
-	m_secondaryOpcodeTable[BREAK]    = std::bind(&CPU::break_,  this);
-	m_secondaryOpcodeTable[DIV]      = std::bind(&CPU::div,     this);
-	m_secondaryOpcodeTable[DIVU]     = std::bind(&CPU::divu,    this);
-	m_secondaryOpcodeTable[JALR]     = std::bind(&CPU::jalr,    this);
-	m_secondaryOpcodeTable[JR]       = std::bind(&CPU::jr,      this);
-	m_secondaryOpcodeTable[MFHI]     = std::bind(&CPU::mfhi,    this);
-	m_secondaryOpcodeTable[MFLO]     = std::bind(&CPU::mflo,    this);
-	m_secondaryOpcodeTable[MTHI]     = std::bind(&CPU::mthi,    this);
-	m_secondaryOpcodeTable[MTLO]     = std::bind(&CPU::mtlo,    this);
-	m_secondaryOpcodeTable[MULT]     = std::bind(&CPU::mult,    this);
-	m_secondaryOpcodeTable[MULTU]    = std::bind(&CPU::multu,   this);
-	m_secondaryOpcodeTable[NOR]      = std::bind(&CPU::nor,     this);
-	m_secondaryOpcodeTable[OR]       = std::bind(&CPU::or_,     this);
-	m_secondaryOpcodeTable[SLL]      = std::bind(&CPU::sll,     this);
-	m_secondaryOpcodeTable[SLLV]     = std::bind(&CPU::sllv,    this);
-	m_secondaryOpcodeTable[SLT]      = std::bind(&CPU::slt,     this);
-	m_secondaryOpcodeTable[SLTU]     = std::bind(&CPU::sltu,    this);
-	m_secondaryOpcodeTable[SRA]      = std::bind(&CPU::sra,     this);
-	m_secondaryOpcodeTable[SRAV]     = std::bind(&CPU::srav,    this);
-	m_secondaryOpcodeTable[SRL]      = std::bind(&CPU::srl,     this);
-	m_secondaryOpcodeTable[SRLV]     = std::bind(&CPU::srlv,    this);
-	m_secondaryOpcodeTable[SUB ]     = std::bind(&CPU::sub,     this);
-	m_secondaryOpcodeTable[SUBU]     = std::bind(&CPU::subu,    this);
-	m_secondaryOpcodeTable[SYSCALL]  = std::bind(&CPU::syscall, this);
-	m_secondaryOpcodeTable[XOR]		 = std::bind(&CPU::xor_,    this);
-}
-
-void mips::CPU::fillREGIMMOpcodeTable()
-{
-	m_regimmOpcodeTable[BGEZ]   = std::bind(&CPU::bgez,   this);
-	m_regimmOpcodeTable[BGEZAL] = std::bind(&CPU::bgezal, this);
-	m_regimmOpcodeTable[BLTZ]   = std::bind(&CPU::bltz,   this);
-	m_regimmOpcodeTable[BLTZAL] = std::bind(&CPU::bltzal, this);
-}
-
-void mips::CPU::fillCOPOpcodeTable()
-{
-	m_copOpcodeTable[CFC] = std::bind(&CPU::cfc2, this);
-	m_copOpcodeTable[CTC] = std::bind(&CPU::ctc2, this);
-	m_copOpcodeTable[MFC] = std::bind(&CPU::mfc,  this);
-	m_copOpcodeTable[MTC] = std::bind(&CPU::mtc,  this);
-
-}
-
 template <typename Type, typename ArithmeticOp>
 void mips::CPU::executeRegisterArithmeticOp(const std::string& mnemonic, const ArithmeticOp& arithmeticOp, bool catchException)
 {
@@ -888,6 +803,12 @@ void mips::CPU::subu()
 {
 	auto subOp = [](int32_t operand1, int32_t operand2)->int32_t { return operand1 - operand2; };
 	executeRegisterArithmeticOp<int32_t>("subu", subOp, false);
+}
+
+void mips::CPU::sw()
+{
+	auto swOp = [this](uint32_t addr, uint32_t data)->void { m_bus->storeWord(addr, data); };
+	executeStoreOp("sh", swOp);
 }
 
 void mips::CPU::swc2()

@@ -40,7 +40,7 @@ void psx::PlayStation::readProgramFile()
 {
 	for (uint32_t i = 0; i < m_cpu_tests.size(); i++)
 	{
-		//disassemble(m_cpu_tests[i]->getName());
+		disassemble(m_cpu_tests[i]->getName());
 	}
 }
 
@@ -63,7 +63,7 @@ void psx::PlayStation::run()
 								 m_cpu_tests[i]->getName() + " ====\n";
 		m_context->getDebugger()->log(testHeader);
 		
-		m_bus->loadTest(m_cpu_tests[i]);
+		m_bus->loadTest(m_cpu_tests[i], m_cpu_tests[i]->getSize());
 		m_cpu.setPC(m_cpu_tests[i].get()->getStartAddr());
 
 		while (m_isRunning)

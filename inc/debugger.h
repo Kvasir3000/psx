@@ -11,7 +11,7 @@
 #include "../inc/constants/debugger_constants.h"
 #include "../inc/constants/cpu_constants.h"
 
-#define CONSOLE_OUTPUT
+//#define CONSOLE_OUTPUT
 
 namespace psx
 {
@@ -83,6 +83,7 @@ namespace psx
 
 			if (m_mode == Mode::DIS)
 			{
+				OUTPUT_STREAM << "\n";
 				return;
 			}
 
@@ -97,12 +98,6 @@ namespace psx
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... }; 
 
 			logDecodedAssembly(mnemonic, operands);
-
-			if (m_mode == Mode::DIS)
-			{
-				return;
-			}
-
 			OUTPUT_STREAM << " // hi = 0x" << std::hex << hi << "(" << std::dec << hi << ")";
 			OUTPUT_STREAM << " lo = 0x" << std::hex << lo << "(" << std::dec << lo << "), ";
 			logDecodedValues(ops.value ...);
@@ -117,6 +112,7 @@ namespace psx
 			OUTPUT_STREAM << mnemonic << " " << operands[0] << ", " << operands[1] << "(" << operands[2] << ")";
 			if (m_mode == Mode::DIS)
 			{
+				OUTPUT_STREAM << "\n";
 				return;
 			}
 			OUTPUT_STREAM << " // ";
@@ -128,11 +124,6 @@ namespace psx
 		{
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... }; 
 			logDecodedAssembly(mnemonic, operands);
-
-			if (m_mode == Mode::DIS)
-			{
-				return;
-			}
 
 			OUTPUT_STREAM << " // ";
 			logDecodedValues(ops.value ...);
@@ -154,6 +145,7 @@ namespace psx
 		{
 			if (m_mode == Mode::DIS)
 			{
+				OUTPUT_STREAM << "\n";
 				return;
 			}
 
