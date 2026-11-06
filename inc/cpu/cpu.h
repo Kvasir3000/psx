@@ -16,11 +16,13 @@
 #include "../inc/cpu/instruction.h"
 #include "../inc/cpu/gte.h"
 #include "../inc/cpu/cop0.h"
-
+#include "../cpu/decoder.h"
+ 
 namespace mips
 {
 	class CPU
 	{
+		using Callback = void (CPU::*)();
 	public:
 		CPU(std::shared_ptr<psx::Context> context);
 		CPU();
@@ -33,6 +35,8 @@ namespace mips
 	private:
 
 		std::shared_ptr<psx::Context>                                  m_context;
+		std::shared_ptr<psx::BUS>									   m_bus;
+		std::shared_ptr<psx::Debugger>                                 m_debugger;
 		std::array<uint32_t, cpu_constants::NUMBER_OF_REGISTERS>       m_registerFile;
 		uint32_t                                                       m_hi;
 		uint32_t                                                       m_lo;
@@ -56,27 +60,19 @@ namespace mips
 		std::queue<DelayLoad>                                          m_delayLoads;
 
 		Instruction                                                    m_instruction;
-		std::function<void()>                                          m_instructionCallback;
-		std::array<std::function<void()>, NUMBER_OF_PRIMARY_OPCODES>   m_primaryOpcodeTable;
-		std::array<std::function<void()>, NUMBER_OF_SECONDARY_OPCODES> m_secondaryOpcodeTable;
-		std::array<std::function<void()>, NUMBER_OF_REGIMM_OPCODES>    m_regimmOpcodeTable;
-		std::array<std::function<void()>, NUMBER_OF_COP_OPCODES>       m_copOpcodeTable;
+		Callback													   m_instructionCallback;
 
 
-
-
-		void fillPrimaryOpcodeTable();
-		void fillSecondaryOpcodeTable();
-		void fillREGIMMOpcodeTable();
-		void fillCOPOpcodeTable();
 
 
 
 		void fetchInstruction();
-		void decodeInstruction();
 		void executeInstruction();
 		void executeDelayedBranch();
 		void executeDelayedLoad();
+
+		friend class Decoder<CPU>;
+	    Decoder<CPU> m_decoder;
 
 		bool checkOverflow(int32_t num1, int32_t num2, int32_t result);
 		bool isAligned(uint32_t addr, cpu_constants::LoadSize loadSize);
@@ -179,6 +175,7 @@ namespace mips
 		void srlv();
 		void sub();
 		void subu();
+		void sw();
 		void swc2();
 		void swl();
 		void swr();

@@ -1,8 +1,8 @@
 #include "../inc/context.h"
 
-psx::Context::Context(std::shared_ptr<psx::BUS> bus) :
+psx::Context::Context(std::shared_ptr<psx::BUS> bus, std::shared_ptr<psx::Debugger> debugger) :
 	m_bus(bus),
-	m_debugger(std::make_shared<Debugger>()),
+	m_debugger(debugger),
 	m_isDebugMode(true)
 {
 

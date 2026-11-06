@@ -31,6 +31,14 @@ public:
 	int16_t  getOffset();
 	int32_t  getJumpTarget();
 
+	bool isInstructionValid();
+
 private: 
+
+	bool validPrimaryInstruction();
+	bool validSecondaryInstruction();
+	bool validRegimInstruction();
+	bool validCOPInstruction();
+
 	uint32_t m_instructionWord; 
 };

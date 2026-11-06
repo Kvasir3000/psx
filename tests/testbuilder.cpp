@@ -73,6 +73,7 @@ namespace testing
 		for (auto test : m_tests)
 		{
 			test.get()->link();
+			test.get()->generateBinary();
 		}
 		return m_tests;
 	}

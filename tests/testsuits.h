@@ -135,7 +135,7 @@ namespace testing
 	public:
 		TestLoadWLR() : Test("TEST_LOAD_WLR")
 		{
-			initRegister(t1, 100);
+			initRegister(t1, 200);
 
 			lwl(t0, t1, 0); 
 			nop();
@@ -167,22 +167,22 @@ namespace testing
 			lwr(t0, t1, 2);
 			nop();
 			add(t0, zero, zero);
-			lwl(t0, t2, 103);
-			lwr(t0, t2, 105);
+			lwl(t0, t2, 203);
+			lwr(t0, t2, 205);
 			nop();
 			endProgram();
 			// word1:|AA|BB|CC|DD|
 			//       |--|--|--|--|			
 			// word2:|AD|AB|EE|FF|
 			//       |--|--|--|--|
-			m_memory[100] = 0xDD;
-			m_memory[101] = 0xCC;
-			m_memory[102] = 0xBB;
-			m_memory[103] = 0xAA;
-			m_memory[104] = 0xFF;
-			m_memory[105] = 0xEE;
-			m_memory[106] = 0xAB;
-			m_memory[107] = 0xAD;
+			m_memory[200] = 0xDD;
+			m_memory[201] = 0xCC;
+			m_memory[202] = 0xBB;
+			m_memory[203] = 0xAA;
+			m_memory[204] = 0xFF;
+			m_memory[205] = 0xEE;
+			m_memory[206] = 0xAB;
+			m_memory[207] = 0xAD;
 		}
 	};
 

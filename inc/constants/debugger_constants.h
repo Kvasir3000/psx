@@ -8,8 +8,9 @@
 #define LOG_HI_LO "hi = " << hi << " lo = " << lo
 #define LOG_HI_LO_SIGNED "hi = " << static_cast<int32_t>(hi) << " lo = " << static_cast<int32_t>(lo)  
 
-enum MOV_HILO
+enum class Mode
 {
-	HI = 33,
-	LO
+	DIS,
+	EXEC
 };
+

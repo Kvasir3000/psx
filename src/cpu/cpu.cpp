@@ -2,15 +2,14 @@
 #include <assert.h>
 
 #include "../../inc/cpu/cpu.h"
+#include "../../inc/cpu/decoder.h"
 
 mips::CPU::CPU(std::shared_ptr<psx::Context> context) :
 	m_context(context),
 	m_pc(0)
 {
-	fillPrimaryOpcodeTable();
-	fillSecondaryOpcodeTable();
-	fillREGIMMOpcodeTable();
-	fillCOPOpcodeTable();
+	m_bus = m_context->getBus();
+	m_debugger = m_context->getDebugger();
 
 	m_registerFile.fill(0);
 
@@ -19,6 +18,7 @@ mips::CPU::CPU(std::shared_ptr<psx::Context> context) :
 
 mips::CPU::CPU()
 {
+
 }
 
 mips::CPU::~CPU()
@@ -27,7 +27,7 @@ mips::CPU::~CPU()
 
 bool mips::CPU::emuCycle()
 {
-	if (m_context->getBus()->isProgramEnd(m_pc) && m_delaySlot.status != cpu_constants::DelaySlotState::Execute)
+	if (m_bus->isProgramEnd(m_pc) && m_delaySlot.status != cpu_constants::DelaySlotState::Execute)
 	{
 		return false;
 	}
@@ -35,7 +35,7 @@ bool mips::CPU::emuCycle()
 	if (m_delaySlot.status != cpu_constants::DelaySlotState::Execute)
 	{
 		fetchInstruction();
-		decodeInstruction();
+		m_instructionCallback = m_decoder.getCallback(m_instruction);
 		executeInstruction();
 		m_pc += cpu_constants::WORD_SIZE_BYTES;
 	}
@@ -54,28 +54,8 @@ bool mips::CPU::emuCycle()
 
 void mips::CPU::fetchInstruction()
 {
-	uint32_t instructionWord = m_context->getBus()->readWord(m_pc);
+	uint32_t instructionWord = m_bus->readWord(m_pc);
 	m_instruction = Instruction(instructionWord);
-}
-
-void mips::CPU::decodeInstruction()
-{
-	if (m_instruction.isREGIMM())
-	{
-		m_instructionCallback = m_regimmOpcodeTable[m_instruction.getREGIMMOpcode()];
-	}
-	else if (m_instruction.isCOP())
-	{
-		m_instructionCallback = m_copOpcodeTable[m_instruction.getCOPOpcode()];
-	}
-	else if (m_instruction.isPrimary())
-	{
-		m_instructionCallback = m_primaryOpcodeTable[m_instruction.getPrimaryOpcode()];
-	}
-	else if (m_instruction.isSecondary())
-	{
-		m_instructionCallback = m_secondaryOpcodeTable[m_instruction.getSecondaryOpcode()];
-	}
 }
 
 void mips::CPU::executeInstruction()
@@ -92,8 +72,8 @@ void mips::CPU::executeInstruction()
 	
 	if (m_instructionCallback)
 	{
-		m_context->getDebugger()->logPC(m_pc);
-		m_instructionCallback();
+		m_debugger->logPC(m_pc);
+		(this->*m_instructionCallback)();
 		m_instructionCallback = 0;
 	}
 }
@@ -106,8 +86,7 @@ void mips::CPU::executeDelayedBranch()
 
 	if (m_context->isDebug())
 	{
-		m_context->getDebugger()->setPC(m_pc);
-		m_context->getDebugger()->logDelayedBranch();
+		m_debugger->logDelayedBranch(m_pc);
 	}
 
 
@@ -127,7 +106,7 @@ void mips::CPU::executeDelayedLoad()
 	if (m_context->isDebug())
 	{
 		Register<uint32_t> rt = Register<uint32_t>(load.registerIdx, m_registerFile[load.registerIdx]);
-		m_context->getDebugger()->logDelayedLoadOp(rt, load.sign, load.size);
+		m_debugger->logDelayedLoadOp(rt, load.sign, load.size);
 	}
 
 	m_delayLoads.pop();
@@ -137,7 +116,7 @@ void mips::CPU::executeDelayedLoad()
 void mips::CPU::raiseException(std::string exception)
 {
 	//std::string exception = exceptionType + " exception raised, COP0 is not implemented yet";
-	m_context->getDebugger()->logWarning(exception);
+	m_debugger->logWarning(exception);
 }
 
 bool mips::CPU::checkOverflow(int32_t num1, int32_t num2, int32_t result)

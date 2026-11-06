@@ -1,4 +1,6 @@
 #include "test.h"
+#include <fstream>
+#include <filesystem>
 
 namespace testing
 {
@@ -115,6 +117,12 @@ namespace testing
 		InstructionDescriptor instruction = { 0 };
 		instruction.immediate = cpu_constants::END;
 		addInstruction(instruction);
+		//generateBinary();
+	}
+
+	uint32_t Test::getSize()
+	{
+		return MEMORY_SIZE;
 	}
 
 	void Test::link()
@@ -181,7 +189,20 @@ namespace testing
 			   bltzal(entry.second.rs, getOffset(), entry.first);
 		   }
 		}
+	}
 
+	void Test::generateBinary()
+	{
+		std::filesystem::path dir = "binFiles/";
+		if (!std::filesystem::exists(dir))
+		{
+			std::filesystem::create_directory(dir);
+		}
+		std::filesystem::path bin = dir.string() + m_name + ".bin";
+		std::fstream binFile(bin, std::fstream::binary | std::ios::out);
+		bool opened = binFile.is_open();
+		binFile.write((const char*)m_memory, MEMORY_SIZE);
+		binFile.close();
 	}
 
 	uint32_t Test::getCurrentAddr()

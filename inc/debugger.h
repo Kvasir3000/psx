@@ -6,6 +6,7 @@
 #include <iostream>
 #include <optional>
 #include <iomanip>
+#include <filesystem>
 
 #include "../inc/constants/debugger_constants.h"
 #include "../inc/constants/cpu_constants.h"
@@ -23,19 +24,19 @@ namespace psx
 		mutable std::ofstream m_traceFile;
 #define OUTPUT_STREAM m_traceFile
 #endif
-		uint32_t      m_pc;
+		Mode m_mode;
 	public:
-		Debugger();
+		Debugger(std::filesystem::path outPath);
 		~Debugger();
-		
+	
+		void setMode(Mode mode);
 		void log(std::string message);
 		void logWarning(std::string message);
 
 
-		void setPC(uint32_t pc);
 		void logPC(uint32_t pc);
 
-		void logDelayedBranch();
+		void logDelayedBranch(uint32_t pc);
 		
 		template<uint32_t N>
 		void logDecodedAssembly(const std::string& mnemonic, const std::array<std::string, N>& operands) const
@@ -80,6 +81,12 @@ namespace psx
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... };
 			logDecodedAssembly(mnemonic, operands);
 
+			if (m_mode == Mode::DIS)
+			{
+				OUTPUT_STREAM << "\n";
+				return;
+			}
+
 			OUTPUT_STREAM << " // ";
 			logDecodedValues(ops.value ...);
 		}
@@ -101,8 +108,14 @@ namespace psx
 		{
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... };
 			std::array<uint32_t, sizeof...(ops)>    values = { ops.value...};
-			
-			OUTPUT_STREAM << mnemonic << " " << operands[0] << ", " << operands[1] << "(" << operands[2] << ") // ";
+
+			OUTPUT_STREAM << mnemonic << " " << operands[0] << ", " << operands[1] << "(" << operands[2] << ")";
+			if (m_mode == Mode::DIS)
+			{
+				OUTPUT_STREAM << "\n";
+				return;
+			}
+			OUTPUT_STREAM << " // ";
 			logDecodedValues(ops.value ...);
 		}
 
@@ -111,6 +124,7 @@ namespace psx
 		{
 			std::array<std::string, sizeof...(ops)> operands = { ops.name ... }; 
 			logDecodedAssembly(mnemonic, operands);
+
 			OUTPUT_STREAM << " // ";
 			logDecodedValues(ops.value ...);
 
@@ -129,6 +143,12 @@ namespace psx
 		template<typename Operand>
 		void logDelayedLoadOp(Operand rt, bool sign, cpu_constants::LoadSize loadSize)
 		{
+			if (m_mode == Mode::DIS)
+			{
+				OUTPUT_STREAM << "\n";
+				return;
+			}
+
 			OUTPUT_STREAM << "Executing delayed load -> " << std::dec << rt.name << " = ";
 
 			if (!sign)
